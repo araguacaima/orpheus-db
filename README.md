@@ -1,1 +1,13 @@
-# orpheus-db
+![amma logo](./docs/resources/amma-logo-full-2.png "AmMa Logo")
+
+ToC
+===
+  * [Orpheus-db](#orpheus-db)
+
+
+orpheus-db
+===
+
+Utilities that helps to create and manage an orpheus db like structure for each table managed by JPA
+
+* Orpheus-Db features and theory could be found [here](http://orpheus-db.github.io/)
