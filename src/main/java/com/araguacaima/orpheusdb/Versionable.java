@@ -9,9 +9,8 @@ import javax.persistence.Entity;
 import javax.persistence.PersistenceUnit;
 import javax.persistence.Table;
 
-@PersistenceUnit(unitName = "open-archi")
 @Entity
-@Table(schema = "META", name = "Versionable")
+@Table(name = "Versionable")
 @DynamicUpdate
 public class Versionable extends BaseEntity {
 
