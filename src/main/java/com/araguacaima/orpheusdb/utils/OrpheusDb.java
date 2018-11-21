@@ -1,7 +1,9 @@
 package com.araguacaima.orpheusdb.utils;
 
 import com.araguacaima.commons.utils.ClassLoaderUtils;
+import com.araguacaima.orpheusdb.annotations.TableWrapper;
 import com.araguacaima.orpheusdb.annotations.Versionable;
+import com.araguacaima.orpheusdb.helpers.AnnotationHelper;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -69,35 +71,18 @@ public class OrpheusDb extends Persistence {
             String incomingPackage = packagesToScan.split(",")[0];
             ClassLoaderUtils clu = new ClassLoaderUtils(Package.getPackage(incomingPackage).getClass().getClassLoader());
             List<String> packagesToScanList = new ArrayList<>();
+            ClassPool pool = ClassPool.getDefault();
             classes.forEach((Class<?> clazz) -> {
                 String name = clazz.getSimpleName();
                 String packageName = clazz.getPackage().getName();
                 String newVersionableName = name + com.araguacaima.orpheusdb.Versionable.class.getSimpleName();
                 String newIndexableName = name + com.araguacaima.orpheusdb.Indexable.class.getSimpleName();
-
-                ClassPool pool = ClassPool.getDefault();
-                CtClass ccVersionable;
-                try {
-                    ccVersionable = pool.get(VERSIONABLE_NAME);
-                    ccVersionable.setName(GENERATED_PACKAGE + "." + newVersionableName);
-
-                    Table table = (Table) ccVersionable.getAnnotation(Table.class);
-
-                    clu.loadClass(ccVersionable.toClass());
-                } catch (NotFoundException | ClassNotFoundException | CannotCompileException e) {
-                    e.printStackTrace();
-                }
-                //TODO change classname, change @Table annotation, change package
-
-
+                fixTableAnnotation(clu, newVersionableName, pool, VERSIONABLE_NAME);
+                fixTableAnnotation(clu, newIndexableName, pool, INDEXABLE_NAME);
                 packagesToScanList.add(packageName + "." + GENERATED_PACKAGE);
-
-
             });
-            
             packagesToScan = packagesToScan + "," + StringUtils.join(packagesToScanList, ",");
             properties.put("packagesToScan", packagesToScan);
-
         }
 
         EntityManagerFactory emf = null;
@@ -115,5 +100,21 @@ public class OrpheusDb extends Persistence {
             throw new PersistenceException("No Persistence provider for EntityManager named " + persistenceUnitName);
         }
         return emf;
+    }
+
+    private static void fixTableAnnotation(ClassLoaderUtils clu, String newClassName, ClassPool pool, String name) {
+        CtClass cc;
+        try {
+            cc = pool.get(name);
+            cc.setName(GENERATED_PACKAGE + "." + newClassName);
+            Table table_ = (Table) cc.getAnnotation(Table.class);
+            com.araguacaima.orpheusdb.annotations.Table table = TableWrapper.fromPersistenceTable(table_);
+            table.setName(newClassName);
+            Class<?> clazz = cc.toClass();
+            AnnotationHelper.alterAnnotationOn(clazz, Table.class, table);
+            clu.loadClass(clazz);
+        } catch (NotFoundException | ClassNotFoundException | CannotCompileException e) {
+            e.printStackTrace();
+        }
     }
 }
