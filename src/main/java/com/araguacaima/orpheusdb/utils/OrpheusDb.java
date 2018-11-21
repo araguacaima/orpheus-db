@@ -3,6 +3,7 @@ package com.araguacaima.orpheusdb.utils;
 import com.araguacaima.commons.utils.ClassLoaderUtils;
 import com.araguacaima.orpheusdb.annotations.TableWrapper;
 import com.araguacaima.orpheusdb.annotations.Versionable;
+import com.araguacaima.orpheusdb.annotations.VersionableImpl;
 import com.araguacaima.orpheusdb.helpers.AnnotationHelper;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -14,6 +15,8 @@ import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -23,16 +26,19 @@ import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceProviderResolver;
 import javax.persistence.spi.PersistenceProviderResolverHolder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class OrpheusDb extends Persistence {
 
 
-    public static Reflections reflections;
-    private static final String GENERATED_PACKAGE = ".generated";
+    private static Reflections reflections;
+    private static final String GENERATED_PACKAGE = "generated";
     private static final String VERSIONABLE_NAME = com.araguacaima.orpheusdb.Versionable.class.getName();
     private static final String INDEXABLE_NAME = com.araguacaima.orpheusdb.Indexable.class.getName();
+    private static final VersionableImpl versionableAnnotation = new VersionableImpl();
+    private static final Logger log = LoggerFactory.getLogger(OrpheusDb.class);
 
     /**
      * Create and return an EntityManagerFactory for the named persistence unit
@@ -53,6 +59,17 @@ public class OrpheusDb extends Persistence {
         try {
             classes.addAll((List<Class<?>>) properties.get("orpheus.db.versionable.classes"));
         } catch (ClassCastException ignored) {
+            try {
+                Arrays.asList(StringUtils.split((String) properties.get("orpheus.db.versionable.classes"), ",")).forEach(className -> {
+                    try {
+                        classes.add(Class.forName(className));
+                    } catch (Throwable ignored1) {
+
+                    }
+                });
+            } catch (Throwable ignored2) {
+
+            }
         }
         String packagesToScan = (String) properties.get("packagesToScan");
         ConfigurationBuilder builder = new ConfigurationBuilder();
@@ -68,8 +85,7 @@ public class OrpheusDb extends Persistence {
         classes.addAll(reflections.getTypesAnnotatedWith(Versionable.class));
 
         if (CollectionUtils.isNotEmpty(classes)) {
-            String incomingPackage = packagesToScan.split(",")[0];
-            ClassLoaderUtils clu = new ClassLoaderUtils(Package.getPackage(incomingPackage).getClass().getClassLoader());
+            ClassLoaderUtils clu = new ClassLoaderUtils(classes.iterator().next().getClassLoader());
             List<String> packagesToScanList = new ArrayList<>();
             ClassPool pool = ClassPool.getDefault();
             classes.forEach((Class<?> clazz) -> {
@@ -77,9 +93,15 @@ public class OrpheusDb extends Persistence {
                 String packageName = clazz.getPackage().getName();
                 String newVersionableName = name + com.araguacaima.orpheusdb.Versionable.class.getSimpleName();
                 String newIndexableName = name + com.araguacaima.orpheusdb.Indexable.class.getSimpleName();
-                fixTableAnnotation(clu, newVersionableName, pool, VERSIONABLE_NAME);
-                fixTableAnnotation(clu, newIndexableName, pool, INDEXABLE_NAME);
+                fixTableAnnotation(clu, newVersionableName, packageName, pool, VERSIONABLE_NAME);
+                fixTableAnnotation(clu, newIndexableName, packageName, pool, INDEXABLE_NAME);
                 packagesToScanList.add(packageName + "." + GENERATED_PACKAGE);
+                String className = packageName + "." + newVersionableName;
+                try {
+                    log.debug("Class '" + Class.forName(className) + "' is fixed and added to classloader!");
+                } catch (ClassNotFoundException ignored) {
+
+                }
             });
             packagesToScan = packagesToScan + "," + StringUtils.join(packagesToScanList, ",");
             properties.put("packagesToScan", packagesToScan);
@@ -102,16 +124,17 @@ public class OrpheusDb extends Persistence {
         return emf;
     }
 
-    private static void fixTableAnnotation(ClassLoaderUtils clu, String newClassName, ClassPool pool, String name) {
+    private static void fixTableAnnotation(ClassLoaderUtils clu, String newClassName, String newPackageName, ClassPool pool, String name) {
         CtClass cc;
         try {
             cc = pool.get(name);
-            cc.setName(GENERATED_PACKAGE + "." + newClassName);
+            cc.setName(newPackageName + "." + GENERATED_PACKAGE + "." + newClassName);
             Table table_ = (Table) cc.getAnnotation(Table.class);
             com.araguacaima.orpheusdb.annotations.Table table = TableWrapper.fromPersistenceTable(table_);
             table.setName(newClassName);
             Class<?> clazz = cc.toClass();
             AnnotationHelper.alterAnnotationOn(clazz, Table.class, table);
+            AnnotationHelper.alterAnnotationOn(clazz, Versionable.class, versionableAnnotation);
             clu.loadClass(clazz);
         } catch (NotFoundException | ClassNotFoundException | CannotCompileException e) {
             e.printStackTrace();
