@@ -170,9 +170,7 @@ public class OrpheusDb extends Persistence {
             cc.writeFile(path);
             clu.loadClass(clazz);
             log.debug(Class.forName(fullyQualifiedName) + "' fixed and added to classloader!");
-        } catch (NotFoundException | ClassNotFoundException | CannotCompileException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (NotFoundException | ClassNotFoundException | CannotCompileException | IOException e) {
             e.printStackTrace();
         }
     }
