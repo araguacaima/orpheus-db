@@ -42,32 +42,7 @@ public class JPAEntityManagerUtils {
     }
 
     public static void init(Map<String, String> map) {
-        String jdbcDbUrl = map.get("JDBC_DATABASE_URL");
-        String jdbcDbUsername;
-        String jdbcDbPassword;
-        log.info("JDBC_DATABASE_URL=" + jdbcDbUrl);
-        jdbcDbUsername = map.get("JDBC_DATABASE_USERNAME");
-        log.info("JDBC_DATABASE_USERNAME=" + jdbcDbUsername);
-        jdbcDbPassword = map.get("JDBC_DATABASE_PASSWORD");
-        log.info("JDBC_DATABASE_PASSWORD=" + jdbcDbPassword);
-        map.put("hibernate.connection.url", jdbcDbUrl);
-        map.put("hibernate.connection.username", jdbcDbUsername);
-        map.put("hibernate.connection.password", jdbcDbPassword);
-        map.put("hibernate.archive.autodetection", "class");
-        map.put("hibernate.default_schema", "Diagrams");
-        map.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQL95Dialect");
-        map.put("hibernate.connection.driver_class", "org.postgresql.Driver");
-        map.put("hibernate.show_sql", log.isDebugEnabled() ? "true" : "false");
-        map.put("hibernate.flushMode", "FLUSH_AUTO");
-        map.put("hibernate.hbm2ddl.auto", "update");
-        map.put("packagesToScan", "com.araguacaima.open_archi.persistence");
-        map.put("hibernate.connection.provider_class", "org.hibernate.c3p0.internal.C3P0ConnectionProvider");
-        map.put("hibernate.c3p0.min_size", "8");
-        map.put("hibernate.c3p0.max_size", "30");
-        map.put("hibernate.c3p0.timeout", "300");
-        map.put("hibernate.c3p0.max_statements", "50");
-        map.put("hibernate.c3p0.idle_test_period", "3000");
-        entityManagerFactory = Persistence.createEntityManagerFactory("open-archi", map);
+        entityManagerFactory = OrpheusDb.createEntityManagerFactory("open-archi", map);
         entityManager = entityManagerFactory.createEntityManager();
         entityManager.unwrap(Session.class);
     }
@@ -326,7 +301,7 @@ public class JPAEntityManagerUtils {
     public static void begin() {
         try {
             entityManager.getTransaction().begin();
-        } catch (IllegalStateException ex) {
+        } catch (java.lang.IllegalStateException ex) {
             if (!"Transaction already active".equals(ex.getMessage())) {
                 throw ex;
             }

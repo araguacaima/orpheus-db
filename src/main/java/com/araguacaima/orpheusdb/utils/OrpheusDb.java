@@ -1,6 +1,7 @@
 package com.araguacaima.orpheusdb.utils;
 
 import com.araguacaima.commons.utils.ClassLoaderUtils;
+import com.araguacaima.commons.utils.JarUtils;
 import com.araguacaima.commons.utils.MapUtils;
 import com.araguacaima.commons.utils.NotNullOrEmptyStringPredicate;
 import com.araguacaima.orpheusdb.annotations.TableWrapper;
@@ -24,8 +25,10 @@ import javax.persistence.*;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceProviderResolver;
 import javax.persistence.spi.PersistenceProviderResolverHolder;
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.net.URL;
 import java.util.*;
 
 @SuppressWarnings("unused")
@@ -36,7 +39,7 @@ public class OrpheusDb extends Persistence {
     private static final String INDEXABLE_NAME = com.araguacaima.orpheusdb.Indexable.class.getName();
     private static final VersionableImpl versionableAnnotation = new VersionableImpl();
     private static final Logger log = LoggerFactory.getLogger(OrpheusDb.class);
-
+    private static final JarUtils jarUtils = new JarUtils();
     private static final ClassLoaderUtils classLoaderUtils = new ClassLoaderUtils(MapUtils.getInstance(),
             new com.araguacaima.commons.utils.StringUtils(new NotNullOrEmptyStringPredicate(), null));
 
@@ -59,9 +62,12 @@ public class OrpheusDb extends Persistence {
 
         try {
             classes.addAll((List<Class<?>>) properties.get("orpheus.db.versionable.classes"));
+            log.info("Properties 'orpheus.db.versionable.classes' found with values: " + StringUtils.join(classes, ","));
         } catch (ClassCastException | NullPointerException ignored) {
             try {
-                Arrays.asList(StringUtils.split((String) properties.get("orpheus.db.versionable.classes"), ","))
+                String str = (String) properties.get("orpheus.db.versionable.classes");
+                log.info("Properties 'orpheus.db.versionable.classes' found with values: " + str);
+                Arrays.asList(StringUtils.split(str, ","))
                         .forEach(className -> {
                             try {
                                 classes.add(Class.forName(className));
@@ -74,6 +80,7 @@ public class OrpheusDb extends Persistence {
 
         String packages = (String) properties.get("orpheus.db.versionable.packages");
         if (packages != null) {
+            log.info("Properties 'orpheus.db.versionable.packages' found with values: " + packages);
             Arrays.asList(StringUtils.split(packages, ",")).forEach(packageName -> {
                 try {
                     Reflections reflections = new Reflections(packageName);
@@ -84,6 +91,7 @@ public class OrpheusDb extends Persistence {
             });
         }
 
+        log.info("Classes to load: " + classes);
         String packagesToScan = (String) properties.get("packagesToScan");
         ConfigurationBuilder builder = new ConfigurationBuilder();
         FilterBuilder filter = new FilterBuilder();
@@ -114,7 +122,8 @@ public class OrpheusDb extends Persistence {
                     tableSchema = table.schema();
                 }
                 PersistenceUnit persistenceUnit = clazz.getAnnotation(PersistenceUnit.class);
-                String path = classLoaderUtils.findClass(clazz.getName()).getPath();
+                URL aClass = classLoaderUtils.findClass(clazz.getName());
+                String path = aClass.getPath();
                 path = path.replace(packageName.replaceAll("\\.", "/") + "/" + name + ".class", StringUtils.EMPTY);
                 if (path.startsWith("/")) {
                     path = path.substring(1);
@@ -122,6 +131,12 @@ public class OrpheusDb extends Persistence {
                 if (path.endsWith("/")) {
                     path = path.substring(0, path.length() - 1);
                 }
+                path = path.replace("file:", StringUtils.EMPTY);
+                if (path.endsWith(".jar!")) {
+                    path = new File(path).getParent();
+                }
+                log.info("Processing class '" + clazz.getName() + "'");
+                log.info("Path to store class '" + path + "'");
                 fixTableAnnotation(clu, newVersionableName, packageName, pool, VERSIONABLE_NAME, persistenceUnit, tableSchema, path);
                 fixTableAnnotation(clu, newIndexableName, packageName, pool, INDEXABLE_NAME, persistenceUnit, tableSchema, path);
                 packagesToScanList.add(packageName + "." + GENERATED_PACKAGE);
@@ -169,7 +184,7 @@ public class OrpheusDb extends Persistence {
             }
             cc.writeFile(path);
             clu.loadClass(clazz);
-            log.debug(Class.forName(fullyQualifiedName) + "' fixed and added to classloader!");
+            log.info(Class.forName(fullyQualifiedName) + "' fixed and added to classloader!");
         } catch (NotFoundException | ClassNotFoundException | CannotCompileException | IOException e) {
             e.printStackTrace();
         }
