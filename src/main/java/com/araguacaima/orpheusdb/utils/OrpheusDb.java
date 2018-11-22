@@ -97,8 +97,13 @@ public class OrpheusDb extends Persistence {
                 String packageName = clazz.getPackage().getName();
                 String newVersionableName = name + com.araguacaima.orpheusdb.Versionable.class.getSimpleName();
                 String newIndexableName = name + com.araguacaima.orpheusdb.Indexable.class.getSimpleName();
-                Table table = clazz.getAnnotation(Table.class);
-                String tableSchema = table.schema();
+                Table table = AnnotationHelper.getAnnotation(clazz, Table.class);
+                String tableSchema;
+                if (table == null) {
+                    tableSchema = null;
+                } else {
+                    tableSchema = table.schema();
+                }
                 PersistenceUnit persistenceUnit = clazz.getAnnotation(PersistenceUnit.class);
                 String path = classLoaderUtils.findClass(clazz.getName()).getPath();
                 path = path.replace(packageName.replaceAll("\\.", "/") + "/" + name + ".class", StringUtils.EMPTY);
@@ -144,7 +149,9 @@ public class OrpheusDb extends Persistence {
             Table table_ = (Table) cc.getAnnotation(Table.class);
             com.araguacaima.orpheusdb.annotations.Table table = TableWrapper.fromPersistenceTable(table_);
             table.setName(newClassName);
-            table.setSchema(tableSchema);
+            if (tableSchema != null) {
+                table.setSchema(tableSchema);
+            }
             Class<?> clazz = cc.toClass();
             AnnotationHelper.alterAnnotationOn(clazz, Table.class, table);
             AnnotationHelper.alterAnnotationOn(clazz, Versionable.class, versionableAnnotation);
