@@ -26,10 +26,7 @@ import javax.persistence.spi.PersistenceProviderResolver;
 import javax.persistence.spi.PersistenceProviderResolverHolder;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @SuppressWarnings("unused")
 public class OrpheusDb extends Persistence {
@@ -68,13 +65,24 @@ public class OrpheusDb extends Persistence {
                     try {
                         classes.add(Class.forName(className));
                     } catch (Throwable ignored1) {
-
                     }
                 });
             } catch (Throwable ignored2) {
-
             }
         }
+
+        String packages = (String) properties.get("orpheus.db.versionable.packages");
+        if (packages != null) {
+            Arrays.asList(StringUtils.split(packages, ",")).forEach(packageName -> {
+                try {
+                    Reflections reflections = new Reflections(packageName);
+                    Set<Class<?>> entityTypes = reflections.getTypesAnnotatedWith(Entity.class);
+                    classes.addAll(entityTypes);
+                } catch (Throwable ignored1) {
+                }
+            });
+        }
+
         String packagesToScan = (String) properties.get("packagesToScan");
         ConfigurationBuilder builder = new ConfigurationBuilder();
         FilterBuilder filter = new FilterBuilder();
