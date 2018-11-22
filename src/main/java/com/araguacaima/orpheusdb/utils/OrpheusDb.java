@@ -61,12 +61,13 @@ public class OrpheusDb extends Persistence {
             classes.addAll((List<Class<?>>) properties.get("orpheus.db.versionable.classes"));
         } catch (ClassCastException | NullPointerException ignored) {
             try {
-                Arrays.asList(StringUtils.split((String) properties.get("orpheus.db.versionable.classes"), ",")).forEach(className -> {
-                    try {
-                        classes.add(Class.forName(className));
-                    } catch (Throwable ignored1) {
-                    }
-                });
+                Arrays.asList(StringUtils.split((String) properties.get("orpheus.db.versionable.classes"), ","))
+                        .forEach(className -> {
+                            try {
+                                classes.add(Class.forName(className));
+                            } catch (Throwable ignored1) {
+                            }
+                        });
             } catch (Throwable ignored2) {
             }
         }
