@@ -41,8 +41,8 @@ public class JPAEntityManagerUtils {
         }
     }
 
-    public static void init(Map<String, String> map) {
-        entityManagerFactory = OrpheusDb.createEntityManagerFactory("open-archi", map);
+    public static void init(String persistenceUnitName, Map<String, String> map) {
+        entityManagerFactory = OrpheusDb.createEntityManagerFactory(persistenceUnitName, map);
         entityManager = entityManagerFactory.createEntityManager();
         entityManager.unwrap(Session.class);
     }

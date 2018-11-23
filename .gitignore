@@ -18,6 +18,7 @@
 .settings
 .settings/
 /target/
+db
 bin
 build/
 hs_err_pid*

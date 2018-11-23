@@ -1,17 +1,14 @@
 package com.araguacaima.orpheusdb;
 
-import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.PersistenceUnit;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "Versionable")
-@DynamicUpdate
+@Table
 public class Versionable extends BaseEntity {
 
     @Column
@@ -20,18 +17,18 @@ public class Versionable extends BaseEntity {
     @Column
     private int num_records = 0;
 
-    @Type(type = "int-array")
+/*    @Type(type = "int-array")
     @Column(
             name = "parent",
             columnDefinition = "integer[]"
-    )
+    )*/
     private Integer[] parent;
 
-    @Type(type = "int-array")
+/*    @Type(type = "int-array")
     @Column(
             name = "children",
             columnDefinition = "integer[]"
-    )
+    )*/
     private Integer[] children;
 
     @Column
