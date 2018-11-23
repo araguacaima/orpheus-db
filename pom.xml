@@ -76,6 +76,7 @@
         <org.apache.maven.plugin-maven-dependency-plugin>3.0.1</org.apache.maven.plugin-maven-dependency-plugin>
         <org.codehaus.mojo-aspectj-maven-plugin>1.8</org.codehaus.mojo-aspectj-maven-plugin>
         <org.apache.maven.plugins-maven-jar-plugin>3.0.2</org.apache.maven.plugins-maven-jar-plugin>
+        <org.codehaus.mojo-aspectj-maven-plugin>1.11</org.codehaus.mojo-aspectj-maven-plugin>
         <maven.skip.tests>true</maven.skip.tests>
         <maven.skipTests>true</maven.skipTests>
 
@@ -442,6 +443,31 @@
                             </rules>
                             <fail>true</fail>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>${org.codehaus.mojo-aspectj-maven-plugin}</version>
+                <configuration>
+                    <complianceLevel>${maven.compiler.source}</complianceLevel>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <showWeaveInfo>true</showWeaveInfo>
+                    <verbose>true</verbose>
+                    <Xlint>ignore</Xlint>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <!-- use this goal to weave all your main classes -->
+                            <goal>compile</goal>
+                            <!-- use this goal to weave all your test classes -->
+                            <goal>test-compile</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

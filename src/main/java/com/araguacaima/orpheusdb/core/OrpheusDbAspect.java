@@ -18,7 +18,7 @@ public class OrpheusDbAspect {
     private static Logger log = LoggerFactory.getLogger(OrpheusDbJPAEntityManagerUtils.class);
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.find(Class, Object))")
-    public static <T> T findClassAndObject(ProceedingJoinPoint joinPoint) throws Throwable {
+    public <T> T findClassAndObject(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         Class clazz = (Class) args[0];
         Object object = args[1];
@@ -29,7 +29,7 @@ public class OrpheusDbAspect {
     }
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.find(Object))")
-    public static <T> T findEntity(ProceedingJoinPoint joinPoint) throws Throwable {
+    public <T> T findEntity(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         Object object = args[0];
         log.debug("Processing com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.find(Class, Object) with values: ");
@@ -38,7 +38,7 @@ public class OrpheusDbAspect {
     }
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.executeQuery(Class, String))")
-    public static <T> List<T> executeQueryClassQuery(ProceedingJoinPoint joinPoint) throws Throwable {
+    public <T> List<T> executeQueryClassQuery(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         Class clazz = (Class) args[0];
         String query = (String) args[1];
@@ -49,7 +49,7 @@ public class OrpheusDbAspect {
     }
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.executeQuery(Class, String, Object))")
-    public static <T> List<T> executeQueryClassQueryParams(ProceedingJoinPoint joinPoint) throws Throwable {
+    public <T> List<T> executeQueryClassQueryParams(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         Class clazz = (Class) args[0];
         String query = (String) args[1];
@@ -62,7 +62,7 @@ public class OrpheusDbAspect {
     }
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.findByQuery(Class, String))")
-    public static <T> T findByQueryClassQuery(ProceedingJoinPoint joinPoint) throws Throwable {
+    public <T> T findByQueryClassQuery(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         Class clazz = (Class) args[0];
         String query = (String) args[1];
@@ -73,7 +73,7 @@ public class OrpheusDbAspect {
     }
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.findByQuery(Class, String, Object))")
-    public static <T> T findByQueryClassQueryParams(ProceedingJoinPoint joinPoint) throws Throwable {
+    public <T> T findByQueryClassQueryParams(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         Class clazz = (Class) args[0];
         String query = (String) args[1];
@@ -86,7 +86,7 @@ public class OrpheusDbAspect {
     }
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.findByNativeQuery(Class, String))")
-    public static <T> T findByNativeQueryClassQuery(ProceedingJoinPoint joinPoint) throws Throwable {
+    public <T> T findByNativeQueryClassQuery(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         Class clazz = (Class) args[0];
         String query = (String) args[1];
@@ -97,7 +97,7 @@ public class OrpheusDbAspect {
     }
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.findByNativeQuery(Class, String, Object))")
-    public static <T> T findByNativeQueryClassQueryParams(ProceedingJoinPoint joinPoint) throws Throwable {
+    public <T> T findByNativeQueryClassQueryParams(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         Class clazz = (Class) args[0];
         String query = (String) args[1];
