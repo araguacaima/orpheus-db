@@ -52,12 +52,6 @@ public class OrpheusDbTest {
         environment.put("hibernate.flushMode", "FLUSH_AUTO");
         environment.put("hibernate.hbm2ddl.auto", "update");
         environment.put("packagesToScan", "com.araguacaima.orpheusdb.model");
-        environment.put("hibernate.connection.provider_class", "org.hibernate.c3p0.internal.C3P0ConnectionProvider");
-        environment.put("hibernate.c3p0.min_size", "8");
-        environment.put("hibernate.c3p0.max_size", "30");
-        environment.put("hibernate.c3p0.timeout", "300");
-        environment.put("hibernate.c3p0.max_statements", "50");
-        environment.put("hibernate.c3p0.idle_test_period", "3000");
         environment.put("orpheus.db.versionable.packages", "com.araguacaima.orpheusdb.model.versionable");
         environment.put("orpheus.db.versionable.classes", "com.araguacaima.orpheusdb.model.B");
         OrpheusDb.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, environment);

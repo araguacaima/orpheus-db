@@ -6,7 +6,10 @@ import com.araguacaima.orpheusdb.annotations.GeneratedImpl;
 import com.araguacaima.orpheusdb.annotations.Versionable;
 import com.araguacaima.orpheusdb.annotations.VersionableImpl;
 import com.araguacaima.orpheusdb.helpers.AnnotationHelper;
-import javassist.*;
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.NotFoundException;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
 import javassist.bytecode.ConstPool;
@@ -36,6 +39,9 @@ public class OrpheusDb extends Persistence {
     private static final String GENERATED_PACKAGE = "generated";
     private static final String VERSIONABLE_NAME = com.araguacaima.orpheusdb.Versionable.class.getName();
     private static final String INDEXABLE_NAME = com.araguacaima.orpheusdb.Indexable.class.getName();
+    private static final String VERSIONABLE_SIMPLE_NAME = com.araguacaima.orpheusdb.Versionable.class.getSimpleName();
+    private static final String INDEXABLE_SIMPLE_NAME = com.araguacaima.orpheusdb.Indexable.class.getSimpleName();
+
     private static final VersionableImpl versionableAnnotation = new VersionableImpl();
     private static final GeneratedImpl generatedAnnotation = new GeneratedImpl();
 
@@ -117,21 +123,13 @@ public class OrpheusDb extends Persistence {
 
         if (CollectionUtils.isNotEmpty(classes)) {
             Set<String> packagesToScanList = new TreeSet<>();
-            List<String> classesToAdd = new ArrayList<>();
+            ClassPool pool = ClassPool.getDefault();
             classes.forEach((Class<?> clazz) -> {
-                ClassLoaderUtils clu = new ClassLoaderUtils(clazz.getClassLoader());
+                String fullyQualifiedClassName;
                 String name = clazz.getSimpleName();
                 String packageName = clazz.getPackage().getName();
-                String newVersionableName = name + com.araguacaima.orpheusdb.Versionable.class.getSimpleName();
-                String newIndexableName = name + com.araguacaima.orpheusdb.Indexable.class.getSimpleName();
-                Table table = AnnotationHelper.getAnnotation(clazz, Table.class);
-                String tableSchema;
-                if (table == null) {
-                    tableSchema = null;
-                } else {
-                    tableSchema = table.schema();
-                }
-                PersistenceUnit persistenceUnit = clazz.getAnnotation(PersistenceUnit.class);
+                String newVersionableName = name + VERSIONABLE_SIMPLE_NAME;
+                String newIndexableName = name + INDEXABLE_SIMPLE_NAME;
                 URL aClass = classLoaderUtils.findClass(clazz.getName());
                 String path = aClass.getPath();
                 path = path.replace(packageName.replaceAll("\\.", "/") + "/" + name + ".class", StringUtils.EMPTY);
@@ -142,56 +140,24 @@ public class OrpheusDb extends Persistence {
                     path = path.substring(0, path.length() - 1);
                 }
                 path = path.replace("file:", StringUtils.EMPTY);
-                log.info("Processing class '" + clazz.getName() + "'");
-                log.info("Path to store class '" + path + "'");
 
-                ClassPool pool = ClassPool.getDefault();
-                pool.insertClassPath(new ClassClassPath(com.araguacaima.orpheusdb.Indexable.class));
-
+                CtClass cc;
                 try {
-                    CtClass cc;
-                    String fullyQualifiedName = packageName + "." + GENERATED_PACKAGE + "." + newVersionableName;
-                    URL urlVersionable = clu.findClass(fullyQualifiedName);
-                    if (urlVersionable == null) {
-                        cc = pool.get(VERSIONABLE_NAME);
-                        cc.setName(fullyQualifiedName);
-                        try {
-                            fixAnnotations(clu, cc, newVersionableName, packageName, VERSIONABLE_NAME, persistenceUnit, tableSchema, fullyQualifiedName);
-                            classesToAdd.add(writeClass(clu, pool, path, fullyQualifiedName, clazz));
-                        } catch (CannotCompileException | IOException | ClassNotFoundException | NotFoundException | IllegalAccessException | NoSuchFieldException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        log.info(urlVersionable + " Previously processed!");
-                    }
-                    fullyQualifiedName = packageName + "." + GENERATED_PACKAGE + "." + newIndexableName;
-                    URL urlIndexable = clu.findClass(fullyQualifiedName);
-                    if (urlIndexable == null) {
-                        cc = pool.get(INDEXABLE_NAME);
-                        cc.setName(fullyQualifiedName);
-                        try {
-                            fixAnnotations(clu, cc, newIndexableName, packageName, INDEXABLE_NAME, persistenceUnit, tableSchema, fullyQualifiedName);
-                            classesToAdd.add(writeClass(clu, pool, path, fullyQualifiedName, clazz));
-                        } catch (CannotCompileException | IOException | ClassNotFoundException | NotFoundException | IllegalAccessException | NoSuchFieldException e) {
-                            e.printStackTrace();
-                        }
+                    fullyQualifiedClassName = packageName + "." + GENERATED_PACKAGE + "." + newVersionableName;
+                    cc = pool.get(VERSIONABLE_NAME);
+                    cc.setName(fullyQualifiedClassName);
+                    fixAnnotations(cc, newVersionableName, packageName, VERSIONABLE_NAME, clazz, fullyQualifiedClassName);
+                    writeClass(pool, path, fullyQualifiedClassName, clazz);
 
-                    } else {
-                        log.info(urlIndexable + " Previously processed!");
-                    }
-                } catch (NotFoundException e) {
+                    fullyQualifiedClassName = packageName + "." + GENERATED_PACKAGE + "." + newIndexableName;
+                    cc = pool.get(INDEXABLE_NAME);
+                    cc.setName(fullyQualifiedClassName);
+                    fixAnnotations(cc, newIndexableName, packageName, INDEXABLE_NAME, clazz, fullyQualifiedClassName);
+                    writeClass(pool, path, fullyQualifiedClassName, clazz);
+                } catch (CannotCompileException | IOException | ClassNotFoundException | NotFoundException | IllegalAccessException | NoSuchFieldException e) {
                     e.printStackTrace();
                 }
                 packagesToScanList.add(packageName + "." + GENERATED_PACKAGE);
-            });
-            ClassLoaderUtils clu = new ClassLoaderUtils(null, null);
-            clu.init();
-            classesToAdd.forEach(clazzStr -> {
-                try {
-                    clu.addResourceToDependencies(clazzStr);
-                } catch (IOException | ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
             });
             packagesToScan = packagesToScan + "," + StringUtils.join(packagesToScanList, ",");
             properties.put("packagesToScan", packagesToScan);
@@ -214,38 +180,51 @@ public class OrpheusDb extends Persistence {
         return emf;
     }
 
-    private static void fixAnnotations(ClassLoaderUtils clu, CtClass cc, String newClassName, String newPackageName,
-                                       String name, java.lang.annotation.Annotation persistenceUnit,
-                                       String tableSchema, String fullyQualifiedName) throws ClassNotFoundException, CannotCompileException {
-        Class<?> clazz;
+    private static void fixAnnotations(CtClass cc, String newClassName, String newPackageName,
+                                       String name, Class clazz, String fullyQualifiedName)
+            throws ClassNotFoundException, CannotCompileException {
+
+        Table table_ = AnnotationHelper.getAnnotation(clazz, Table.class);
+        String tableSchema;
+        if (table_ == null) {
+            tableSchema = null;
+        } else {
+            tableSchema = table_.schema();
+        }
+        PersistenceUnit persistenceUnit = (PersistenceUnit) clazz.getAnnotation(PersistenceUnit.class);
+
         ClassFile classFile = cc.getClassFile();
         ConstPool constPool = classFile.getConstPool();
         AnnotationsAttribute attribute = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
         if (persistenceUnit != null) {
             Annotation persistenceUnitAnnotation = new Annotation(PersistenceUnit.class.getName(), constPool);
-            PersistenceUnit persistenceUnit1 = (PersistenceUnit) persistenceUnit;
-            persistenceUnitAnnotation.addMemberValue("name", new StringMemberValue(persistenceUnit1.name(), constPool));
-            persistenceUnitAnnotation.addMemberValue("unitName", new StringMemberValue(persistenceUnit1.unitName(), constPool));
+            persistenceUnitAnnotation.addMemberValue("name", new StringMemberValue(persistenceUnit.name(), constPool));
+            persistenceUnitAnnotation.addMemberValue("unitName", new StringMemberValue(persistenceUnit.unitName(), constPool));
             attribute.addAnnotation(persistenceUnitAnnotation);
         }
-        Annotation tableAnnotation = new Annotation(Table.class.getName(), constPool);
-        Table table1 = (Table) cc.getAnnotation(Table.class);
-        tableAnnotation.addMemberValue("name", new StringMemberValue(newClassName, constPool));
-        if (StringUtils.isNotBlank(table1.catalog())) {
-            tableAnnotation.addMemberValue("catalog", new StringMemberValue(table1.catalog(), constPool));
+        Table table = (Table) cc.getAnnotation(Table.class);
+        if (table != null) {
+            Annotation tableAnnotation = new Annotation(Table.class.getName(), constPool);
+            tableAnnotation.addMemberValue("name", new StringMemberValue(newClassName, constPool));
+            if (StringUtils.isNotBlank(table.catalog())) {
+                tableAnnotation.addMemberValue("catalog", new StringMemberValue(table.catalog(), constPool));
+            }
+            if (tableSchema != null) {
+                tableAnnotation.addMemberValue("schema", new StringMemberValue(tableSchema, constPool));
+            }
+            attribute.addAnnotation(tableAnnotation);
         }
-        if (tableSchema != null) {
-            tableAnnotation.addMemberValue("schema", new StringMemberValue(tableSchema, constPool));
-        }
-        attribute.addAnnotation(tableAnnotation);
         Annotation generatedAnnotation_ = new Annotation(Generated.class.getName(), constPool);
         attribute.addAnnotation(generatedAnnotation_);
+        Entity entity = (Entity) cc.getAnnotation(Entity.class);
+        if (entity != null) {
+            Annotation entityAnnotation_ = new Annotation(Entity.class.getName(), constPool);
+            attribute.addAnnotation(entityAnnotation_);
+        }
         classFile.addAttribute(attribute);
-        cc.toClass();
-
     }
 
-    private static String writeClass(ClassLoaderUtils clu, ClassPool pool, String path, String fullyQualifiedName, Class<?> clazz) throws CannotCompileException, IOException, ClassNotFoundException, NotFoundException, NoSuchFieldException, IllegalAccessException {
+    private static void writeClass(ClassPool pool, String path, String fullyQualifiedName, Class<?> clazz) throws CannotCompileException, IOException, ClassNotFoundException, NotFoundException, NoSuchFieldException, IllegalAccessException {
         CtClass cc = pool.get(fullyQualifiedName);
         boolean isJar = path.endsWith(".jar!");
         String replacedFullyQualifiedName = fullyQualifiedName.replaceAll("\\.", "/");
@@ -263,6 +242,6 @@ public class OrpheusDb extends Persistence {
             resource = parent + "/" + replacedFullyQualifiedName + ".class";
             log.info("Class '" + resource + "' written!");
         }
-        return resource;
+        pool.getClassLoader().loadClass(fullyQualifiedName);
     }
 }
