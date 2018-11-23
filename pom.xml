@@ -61,6 +61,7 @@
         <org.hibernate-hibernate-core>5.3.5.Final</org.hibernate-hibernate-core>
         <org.hibernate.javax.persistence-hibernate-jpa-2.1-api>1.0.2.Final
         </org.hibernate.javax.persistence-hibernate-jpa-2.1-api>
+        <aspectj.version>1.9.2</aspectj.version>
 
         <!-- maven plugins -->
         <minimum-maven-version>3.1</minimum-maven-version>
@@ -173,6 +174,23 @@
             <version>${org.hibernate.javax.persistence-hibernate-jpa-2.1-api}</version>
             <scope>compile</scope>
         </dependency>
+
+        <!-- AspectJ -->
+
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>${aspectj.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>${aspectj.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
 
         <!-- Testing -->
         <dependency>

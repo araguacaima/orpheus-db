@@ -1,0 +1,9 @@
+<aspectj>
+    <aspects>
+        <aspect name="com.araguacaima.orpheusdb.core.OrpheusDbAspect"/>
+    </aspects>
+    <weaver>
+        <include within="com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils" />
+    </weaver>
+
+</aspectj>
