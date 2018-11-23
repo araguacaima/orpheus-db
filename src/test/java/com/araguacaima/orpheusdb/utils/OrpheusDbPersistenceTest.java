@@ -1,6 +1,7 @@
 package com.araguacaima.orpheusdb.utils;
 
 import com.araguacaima.commons.utils.MapUtils;
+import com.araguacaima.orpheusdb.core.OrpheusDbPersistence;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -12,10 +13,10 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 
-public class OrpheusDbTest {
+public class OrpheusDbPersistenceTest {
 
     private static final String PERSISTENCE_UNIT_NAME = "orpheus-db-test";
-    private static Logger log = LoggerFactory.getLogger(OrpheusDbTest.class);
+    private static Logger log = LoggerFactory.getLogger(OrpheusDbPersistenceTest.class);
     private static Map<String, String> environment;
     private static ProcessBuilder processBuilder = new ProcessBuilder();
 
@@ -23,7 +24,7 @@ public class OrpheusDbTest {
     public void init() {
 
         environment = processBuilder.environment();
-        URL url = JPAEntityManagerUtils.class.getResource("/config.properties");
+        URL url = OrpheusDbJPAEntityManagerUtils.class.getResource("/config.properties");
         Properties properties = new Properties();
         try {
             properties.load(url.openStream());
@@ -54,6 +55,6 @@ public class OrpheusDbTest {
         environment.put("packagesToScan", "com.araguacaima.orpheusdb.model");
         environment.put("orpheus.db.versionable.packages", "com.araguacaima.orpheusdb.model.versionable");
         environment.put("orpheus.db.versionable.classes", "com.araguacaima.orpheusdb.model.B");
-        OrpheusDb.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, environment);
+        OrpheusDbPersistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, environment);
     }
 }

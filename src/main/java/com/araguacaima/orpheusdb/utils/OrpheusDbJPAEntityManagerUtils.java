@@ -1,6 +1,7 @@
 package com.araguacaima.orpheusdb.utils;
 
 import com.araguacaima.commons.utils.ReflectionUtils;
+import com.araguacaima.orpheusdb.core.OrpheusDbPersistence;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.Session;
 import org.slf4j.Logger;
@@ -12,7 +13,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class JPAEntityManagerUtils {
+@SuppressWarnings({"WeakerAccess", "unused"})
+public class OrpheusDbJPAEntityManagerUtils {
     private static EntityManagerFactory entityManagerFactory;
     private static EntityManager entityManager;
     private static boolean autocommit = true;
@@ -21,7 +23,7 @@ public class JPAEntityManagerUtils {
     @JsonIgnore
     private static ReflectionUtils reflectionUtils = new ReflectionUtils(null);
 
-    private static Logger log = LoggerFactory.getLogger(JPAEntityManagerUtils.class);
+    private static Logger log = LoggerFactory.getLogger(OrpheusDbJPAEntityManagerUtils.class);
 
     public static void closeAll() {
         close(entityManager, entityManagerFactory);
@@ -42,19 +44,16 @@ public class JPAEntityManagerUtils {
     }
 
     public static void init(String persistenceUnitName, Map<String, String> map) {
-        entityManagerFactory = OrpheusDb.createEntityManagerFactory(persistenceUnitName, map);
+        entityManagerFactory = OrpheusDbPersistence.createEntityManagerFactory(persistenceUnitName, map);
         entityManager = entityManagerFactory.createEntityManager();
         entityManager.unwrap(Session.class);
-    }
-
-    public static EntityManager getEntityManager() {
-        return entityManager;
     }
 
     public static <T> T find(Class<T> clazz, Object key) {
         return entityManager.find(clazz, key);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T find(T entity) {
         try {
             Object key = extractId(entity);
@@ -104,11 +103,11 @@ public class JPAEntityManagerUtils {
         }
     }
 
-
     public static <T> T findByNativeQuery(Class<T> clazz, String query) {
         return findByNativeQuery(clazz, query, null);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T findByNativeQuery(Class<T> clazz, String query, Map<String, Object> params) {
         Query namedQuery = entityManager.createNativeQuery(query, clazz);
         if (params != null) {
@@ -346,7 +345,7 @@ public class JPAEntityManagerUtils {
     }
 
     public static void setAutocommit(boolean autocommit) {
-        JPAEntityManagerUtils.autocommit = autocommit;
+        OrpheusDbJPAEntityManagerUtils.autocommit = autocommit;
     }
 
     public static void flush() {

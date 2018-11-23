@@ -1,4 +1,4 @@
-package com.araguacaima.orpheusdb.utils;
+package com.araguacaima.orpheusdb.core;
 
 import com.araguacaima.commons.utils.*;
 import com.araguacaima.orpheusdb.annotations.Generated;
@@ -34,7 +34,7 @@ import java.net.URL;
 import java.util.*;
 
 @SuppressWarnings("unused")
-public class OrpheusDb extends Persistence {
+public class OrpheusDbPersistence extends Persistence {
 
     private static final String GENERATED_PACKAGE = "generated";
     private static final String VERSIONABLE_NAME = com.araguacaima.orpheusdb.Versionable.class.getName();
@@ -45,7 +45,7 @@ public class OrpheusDb extends Persistence {
     private static final VersionableImpl versionableAnnotation = new VersionableImpl();
     private static final GeneratedImpl generatedAnnotation = new GeneratedImpl();
 
-    private static final Logger log = LoggerFactory.getLogger(OrpheusDb.class);
+    private static final Logger log = LoggerFactory.getLogger(OrpheusDbPersistence.class);
     private static final JarUtils jarUtils = new JarUtils();
     private static final ClassLoaderUtils classLoaderUtils = new ClassLoaderUtils(MapUtils.getInstance(),
             new com.araguacaima.commons.utils.StringUtils(new NotNullOrEmptyStringPredicate(), null));
@@ -73,7 +73,9 @@ public class OrpheusDb extends Persistence {
         } catch (ClassCastException | NullPointerException ignored) {
             try {
                 String str = (String) properties.get("orpheus.db.versionable.classes");
-                log.info("Properties 'orpheus.db.versionable.classes' found with values: " + str);
+                if (StringUtils.isNotBlank(str)) {
+                    log.info("Properties 'orpheus.db.versionable.classes' found with values: " + str);
+                }
                 Arrays.asList(StringUtils.split(str, ","))
                         .forEach(className -> {
                             try {
