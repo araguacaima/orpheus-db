@@ -351,4 +351,45 @@ public class OrpheusDbJPAEntityManagerUtils {
     public static void flush() {
         entityManager.flush();
     }
+
+    public static <T> T findVersioned(Class<T> clazz, Object object) {
+        //TODO Finish Orpheus DB versioning implementation
+        return find(clazz, object);
+    }
+
+    public static <T> T findVersioned(T entity) {
+        //TODO Finish Orpheus DB versioning implementation
+        return find(entity);
+    }
+
+    public static <T> List<T> executeQueryVersioned(Class<T> clazz, String query) {
+        //TODO Finish Orpheus DB versioning implementation
+        return executeQuery(clazz, query);
+    }
+
+    public static <T> List<T> executeQueryVersioned(Class<T> clazz, String query, Map<String, Object> params) {
+        //TODO Finish Orpheus DB versioning implementation
+        return executeQuery(clazz, query, params);
+    }
+
+    public static <T> T findByQueryVersioned(Class<T> clazz, String query) {
+        //TODO Finish Orpheus DB versioning implementation
+        return findByQuery(clazz, query);
+    }
+
+    public static <T> T findByQueryVersioned(Class<T> clazz, String query, Map<String, Object> params) {
+        //TODO Finish Orpheus DB versioning implementation
+        return findByQuery(clazz, query, params);
+    }
+
+    public static <T> T findByNativeQueryVersioned(Class<T> clazz, String query) {
+        //TODO Finish Orpheus DB versioning implementation
+        return findByNativeQuery(clazz, query);
+    }
+
+    public static <T> T findByNativeQueryVersioned(Class<T> clazz, String query, Map<String, Object> params) {
+        //TODO Finish Orpheus DB versioning implementation
+        return findByNativeQuery(clazz, query, params);
+    }
+
 }

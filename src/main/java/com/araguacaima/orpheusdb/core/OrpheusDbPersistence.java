@@ -33,14 +33,14 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class OrpheusDbPersistence extends Persistence {
 
-    private static final String GENERATED_PACKAGE = "generated";
+    public static final String GENERATED_PACKAGE = "generated";
     private static final String VERSIONABLE_NAME = com.araguacaima.orpheusdb.Versionable.class.getName();
     private static final String INDEXABLE_NAME = com.araguacaima.orpheusdb.Indexable.class.getName();
-    private static final String VERSIONABLE_SIMPLE_NAME = com.araguacaima.orpheusdb.Versionable.class.getSimpleName();
-    private static final String INDEXABLE_SIMPLE_NAME = com.araguacaima.orpheusdb.Indexable.class.getSimpleName();
+    public static final String VERSIONABLE_SIMPLE_NAME = com.araguacaima.orpheusdb.Versionable.class.getSimpleName();
+    public static final String INDEXABLE_SIMPLE_NAME = com.araguacaima.orpheusdb.Indexable.class.getSimpleName();
 
     private static final VersionableImpl versionableAnnotation = new VersionableImpl();
     private static final GeneratedImpl generatedAnnotation = new GeneratedImpl();

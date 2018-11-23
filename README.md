@@ -2,10 +2,10 @@
 
 ToC
 ===
-  * [Orpheus-db](#orpheus-db)
+  * [Orpheus-DB](#orpheus-db)
 
 
-orpheus-db
+Orpheus-DB
 ===
 
 Utilities that helps to create and manage an orpheus db like structure for each table managed by JPA
