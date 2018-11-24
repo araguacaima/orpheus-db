@@ -17,6 +17,7 @@ import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.annotation.StringMemberValue;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
@@ -36,6 +37,7 @@ import java.util.*;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class OrpheusDbPersistence extends Persistence {
 
+    private static final String ORPHEUS_DB = "orpheus-db";
     public static final String GENERATED_PACKAGE = "generated";
     private static final String VERSIONABLE_NAME = com.araguacaima.orpheusdb.Versionable.class.getName();
     private static final String INDEXABLE_NAME = com.araguacaima.orpheusdb.Indexable.class.getName();
@@ -49,6 +51,10 @@ public class OrpheusDbPersistence extends Persistence {
     private static final JarUtils jarUtils = new JarUtils();
     private static final ClassLoaderUtils classLoaderUtils = new ClassLoaderUtils(MapUtils.getInstance(),
             new com.araguacaima.commons.utils.StringUtils(new NotNullOrEmptyStringPredicate(), null));
+    private static final String GENERATED_CLASSES = "generated-classes";
+    private static final String RELATIVE_TEMP_DIR = ORPHEUS_DB + "/" + GENERATED_CLASSES;
+    private static final String ORPHEUS_DB_HOME = SystemUtils.getUserHome().getAbsolutePath() + "/" + ORPHEUS_DB;
+    private static final String TMP_DIR = ORPHEUS_DB_HOME + "/" + RELATIVE_TEMP_DIR;
 
     /**
      * Create and return an EntityManagerFactory for the named persistence unit
@@ -66,6 +72,13 @@ public class OrpheusDbPersistence extends Persistence {
     public static EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
 
         final List<Class<?>> classes = new ArrayList<>();
+        File tmpDir = new File(TMP_DIR);
+        try {
+            FileUtils.forceDelete(new File(ORPHEUS_DB_HOME));
+            FileUtils.forceMkdir(tmpDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         try {
             classes.addAll((List<Class<?>>) properties.get("orpheus.db.versionable.classes"));
@@ -135,13 +148,13 @@ public class OrpheusDbPersistence extends Persistence {
                 URL aClass = classLoaderUtils.findClass(clazz.getName());
                 String path = aClass.getPath();
                 path = path.replace(packageName.replaceAll("\\.", "/") + "/" + name + ".class", StringUtils.EMPTY);
+                path = path.replace("file:", StringUtils.EMPTY);
                 if (path.startsWith("/")) {
                     path = path.substring(1);
                 }
                 if (path.endsWith("/")) {
                     path = path.substring(0, path.length() - 1);
                 }
-                path = path.replace("file:", StringUtils.EMPTY);
 
                 CtClass cc;
                 try {
@@ -161,6 +174,20 @@ public class OrpheusDbPersistence extends Persistence {
                 }
                 packagesToScanList.add(packageName + "." + GENERATED_PACKAGE);
             });
+            try {
+                if (!FileUtils.isEmpty(tmpDir)) {
+                    try {
+                        String jarOutputFullPath = tmpDir.getParent() + File.separator + ORPHEUS_DB + "-" + GENERATED_CLASSES + ".jar";
+                        jarUtils.generateJarFromDirectory(tmpDir.getAbsolutePath(),
+                                jarOutputFullPath, 2);
+                        classLoaderUtils.loadClassesInsideJar(new File(jarOutputFullPath));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             packagesToScan = packagesToScan + "," + StringUtils.join(packagesToScanList, ",");
             properties.put("packagesToScan", packagesToScan);
         }
@@ -226,7 +253,8 @@ public class OrpheusDbPersistence extends Persistence {
         classFile.addAttribute(attribute);
     }
 
-    private static void writeClass(ClassPool pool, String path, String fullyQualifiedName, Class<?> clazz) throws CannotCompileException, IOException, ClassNotFoundException, NotFoundException, NoSuchFieldException, IllegalAccessException {
+    private static void writeClass(ClassPool pool, String path, String fullyQualifiedName, Class<?> clazz)
+            throws CannotCompileException, IOException, ClassNotFoundException, NotFoundException, NoSuchFieldException, IllegalAccessException {
         CtClass cc = pool.get(fullyQualifiedName);
         boolean isJar = path.endsWith(".jar!");
         String replacedFullyQualifiedName = fullyQualifiedName.replaceAll("\\.", "/");
@@ -237,13 +265,11 @@ public class OrpheusDbPersistence extends Persistence {
             resource = path + "/" + replacedFullyQualifiedName + ".class'";
             log.info("Class '" + resource + " written!");
         } else {
-            String parent = new File(path).getParent() + "/generated-classes";
-            File file = new File(parent);
-            FileUtils.forceMkdir(file);
-            cc.writeFile(parent);
-            resource = parent + "/" + replacedFullyQualifiedName + ".class";
+            FileUtils.forceMkdir(new File(TMP_DIR));
+            cc.writeFile(TMP_DIR);
+            resource = TMP_DIR + "/" + replacedFullyQualifiedName + ".class";
             log.info("Class '" + resource + "' written!");
         }
-        pool.getClassLoader().loadClass(fullyQualifiedName);
+        //pool.getClassLoader().loadClass(fullyQualifiedName);
     }
 }

@@ -52,9 +52,9 @@ public class OrpheusDbPersistenceTest {
         environment.put("hibernate.show_sql", "true");
         environment.put("hibernate.flushMode", "FLUSH_AUTO");
         environment.put("hibernate.hbm2ddl.auto", "update");
-        environment.put("packagesToScan", "com.araguacaima.orpheusdb.model");
-        environment.put("orpheus.db.versionable.packages", "com.araguacaima.orpheusdb.model.versionable");
-        environment.put("orpheus.db.versionable.classes", "com.araguacaima.orpheusdb.model.B");
+        environment.put("packagesToScan", "com.araguacaima.orpheusdb.model,com.araguacaima.orpheusdb.jar.model");
+        environment.put("orpheus.db.versionable.packages", "com.araguacaima.orpheusdb.model.versionable,com.araguacaima.orpheusdb.jar.model.versionable");
+        environment.put("orpheus.db.versionable.classes", "com.araguacaima.orpheusdb.model.B,com.araguacaima.orpheusdb.jar.model.H");
         OrpheusDbPersistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, environment);
     }
 }
