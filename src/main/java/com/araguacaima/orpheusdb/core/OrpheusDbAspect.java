@@ -19,8 +19,8 @@ public class OrpheusDbAspect {
 
     private Class getVersionedClass(Class clazz) {
         Class versionedClass = null;
-        String versionedPackageName = clazz.getPackage().getName() + OrpheusDbPersistence.GENERATED_PACKAGE;
-        String versionedClassName = versionedPackageName + clazz.getSimpleName() + OrpheusDbPersistence.VERSIONABLE_SIMPLE_NAME;
+        String versionedPackageName = clazz.getPackage().getName() + "." + OrpheusDbPersistence.GENERATED_PACKAGE;
+        String versionedClassName = versionedPackageName + "." + clazz.getSimpleName() + OrpheusDbPersistence.VERSIONABLE_SIMPLE_NAME;
         try {
             versionedClass = Class.forName(versionedClassName);
             log.debug("Class '" + clazz.getName() + "' is versioned by '" + versionedClass.getName() + ". Orpheus is going to intercept query in order to provide versioned data properly");
