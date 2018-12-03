@@ -24,8 +24,10 @@ import java.util.UUID;
 @MappedSuperclass
 public class BaseEntity {
 
+    public static final String HEAD_VERSION = "HEAD";
+
     @Id
-    private String vid;
+    private String vid = HEAD_VERSION;
 
     public BaseEntity() {
         this.vid = generateId();

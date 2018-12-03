@@ -1,7 +1,9 @@
 package com.araguacaima.orpheusdb.utils;
 
 import com.araguacaima.commons.utils.ReflectionUtils;
+import com.araguacaima.commons.utils.StringUtils;
 import com.araguacaima.orpheusdb.core.OrpheusDbPersistence;
+import com.araguacaima.orpheusdb.helpers.AnnotationHelper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.Session;
 import org.slf4j.Logger;
@@ -9,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +21,7 @@ public class OrpheusDbJPAEntityManagerUtils {
     private static EntityManagerFactory entityManagerFactory;
     private static EntityManager entityManager;
     private static boolean autocommit = true;
+    public static final String VERSIONABLE_OBJECT = "VersionableObject";
 
     @Transient
     @JsonIgnore
@@ -118,6 +122,24 @@ public class OrpheusDbJPAEntityManagerUtils {
         try {
             Object singleResult = namedQuery.getSingleResult();
             return (T) singleResult;
+        } catch (javax.persistence.NoResultException ignored) {
+            return null;
+        }
+    }
+
+    public static <T> List<T> findListByNativeQuery(Class<T> clazz, String query) {
+        return findListByNativeQuery(clazz, query, null);
+    }
+
+    public static <T> List<T> findListByNativeQuery(Class<T> clazz, String query, Map<String, Object> params) {
+        Query namedQuery = entityManager.createNativeQuery(query, clazz);
+        if (params != null) {
+            for (Map.Entry<String, Object> param : params.entrySet()) {
+                namedQuery.setParameter(param.getKey(), param.getValue());
+            }
+        }
+        try {
+            return namedQuery.getResultList();
         } catch (javax.persistence.NoResultException ignored) {
             return null;
         }
@@ -352,19 +374,24 @@ public class OrpheusDbJPAEntityManagerUtils {
         entityManager.flush();
     }
 
-    public static <T> T findVersioned(Class<T> clazz, Object object) {
+    public static <T, V> List<V> executeQueryVersioned(Class<T> clazz, String query) {
         //TODO Finish Orpheus DB versioning implementation
-        return find(clazz, object);
-    }
-
-    public static <T> T findVersioned(T entity) {
-        //TODO Finish Orpheus DB versioning implementation
-        return find(entity);
-    }
-
-    public static <T> List<T> executeQueryVersioned(Class<T> clazz, String query) {
-        //TODO Finish Orpheus DB versioning implementation
-        return executeQuery(clazz, query);
+        Table table = AnnotationHelper.getAnnotation(clazz, Table.class);
+        String query_ = "SELECT children FROM " + table.schema() + "." + clazz.getSimpleName() + " WHERE vid = 'HEAD'";
+        List<T> ids = findListByNativeQuery(clazz, query_);
+        List<V> result = new ArrayList<>();
+        Class<V> unversionedClazz = getUnversionedClass(clazz);
+        List<V> list2 = executeQuery(unversionedClazz, query);
+        list2.forEach(entity -> {
+            Object id = reflectionUtils.invokeGetter(entity, "id");
+            ids.forEach(id_ -> {
+                Object vid = reflectionUtils.invokeGetter(id_, "vid");
+                if (id_.equals(vid)) {
+                    result.add(entity);
+                }
+            });
+        });
+        return result;
     }
 
     public static <T> List<T> executeQueryVersioned(Class<T> clazz, String query, Map<String, Object> params) {
@@ -392,4 +419,65 @@ public class OrpheusDbJPAEntityManagerUtils {
         return findByNativeQuery(clazz, query, params);
     }
 
+
+    public static  <T, V> List<V>  findListByNativeQueryVersioned(Class<T> clazz, String query) {
+        //TODO Finish Orpheus DB versioning implementation
+        Table table = AnnotationHelper.getAnnotation(clazz, Table.class);
+        String query_ = "SELECT children FROM " + table.schema() + "." + clazz.getSimpleName() + " WHERE vid = 'HEAD'";
+        List<T> ids = findListByNativeQuery(clazz, query_);
+        List<V> result = new ArrayList<>();
+        Class<V> unversionedClazz = getUnversionedClass(clazz);
+        List<V> list2 = findListByNativeQuery(unversionedClazz, query);
+        list2.forEach(entity -> {
+            Object id = reflectionUtils.invokeGetter(entity, "id");
+            ids.forEach(id_ -> {
+                Object vid = reflectionUtils.invokeGetter(id_, "vid");
+                if (id_.equals(vid)) {
+                    result.add(entity);
+                }
+            });
+        });
+        return result;
+    }
+
+    public static  <T, V> List<V>  findListByNativeQueryVersioned(Class<T> clazz, String query, Map<String, Object> params) {
+        //TODO Finish Orpheus DB versioning implementation
+        return findListByNativeQueryVersioned(clazz, query, params);
+    }
+
+
+    public static <T,V> Class<V> getVersionedClass(Class<T> clazz) {
+        Class<V> versionedClass = null;
+        String versionedPackageName = clazz.getPackage().getName() + "." + OrpheusDbPersistence.GENERATED_PACKAGE;
+        String versionedClassName = versionedPackageName + "." + clazz.getSimpleName() + OrpheusDbPersistence.VERSIONABLE_SIMPLE_NAME;
+        try {
+            versionedClass = (Class<V>) Class.forName(versionedClassName);
+            log.debug("Class '" + clazz.getName() + "' is versioned by '" + versionedClass.getName() + ". Orpheus is going to intercept query in order to provide versioned data properly");
+        } catch (Throwable t) {
+            log.error(t.getMessage());
+            log.debug("Class '" + clazz.getName() + "' is not versioned. Continuing with no intervention!");
+        }
+        return versionedClass;
+    }
+
+    public static <T,V> Class<V> getUnversionedClass(Class<T> clazz) {
+        Class<V> unversionedClass = null;
+        String unversionedPackageName = clazz.getPackage().getName();
+        String suffix = "." + OrpheusDbPersistence.GENERATED_PACKAGE;
+        if (unversionedPackageName.endsWith(suffix)) {
+            unversionedPackageName = unversionedPackageName.replace(suffix, StringUtils.EMPTY);
+        }
+        String unversionedClassName = clazz.getSimpleName();
+        if (unversionedClassName.endsWith(OrpheusDbPersistence.VERSIONABLE_SIMPLE_NAME)) {
+            unversionedClassName = unversionedPackageName + "." + unversionedClassName.replace(OrpheusDbPersistence.VERSIONABLE_SIMPLE_NAME, StringUtils.EMPTY);
+        }
+        try {
+            unversionedClass = (Class<V>) Class.forName(unversionedClassName);
+            log.debug("Class '" + clazz.getName() + "' is versioned by '" + unversionedClass.getName() + ". Orpheus is going to intercept query in order to provide versioned data properly");
+        } catch (Throwable t) {
+            log.error(t.getMessage());
+            log.debug("Class '" + clazz.getName() + "' is not versioned. Continuing with no intervention!");
+        }
+        return unversionedClass;
+    }
 }

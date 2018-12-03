@@ -6,6 +6,7 @@ import com.araguacaima.orpheusdb.annotations.GeneratedImpl;
 import com.araguacaima.orpheusdb.annotations.Versionable;
 import com.araguacaima.orpheusdb.annotations.VersionableImpl;
 import com.araguacaima.orpheusdb.helpers.AnnotationHelper;
+import com.araguacaima.orpheusdb.helpers.ClassLoaderHelper;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -52,9 +53,8 @@ public class OrpheusDbPersistence extends Persistence {
     private static final ClassLoaderUtils classLoaderUtils = new ClassLoaderUtils(MapUtils.getInstance(),
             new com.araguacaima.commons.utils.StringUtils(new NotNullOrEmptyStringPredicate(), null));
     private static final String GENERATED_CLASSES = "generated-classes";
-    private static final String RELATIVE_TEMP_DIR = ORPHEUS_DB + "/" + GENERATED_CLASSES;
     private static final String ORPHEUS_DB_HOME = SystemUtils.getUserHome().getAbsolutePath() + "/" + ORPHEUS_DB;
-    private static final String TMP_DIR = ORPHEUS_DB_HOME + "/" + RELATIVE_TEMP_DIR;
+    private static final String TMP_DIR = ORPHEUS_DB_HOME + "/" + GENERATED_CLASSES;
 
     /**
      * Create and return an EntityManagerFactory for the named persistence unit
@@ -70,6 +70,8 @@ public class OrpheusDbPersistence extends Persistence {
      */
     @SuppressWarnings("unchecked")
     public static EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
+        classLoaderUtils.init();
+        ClassLoaderHelper classLoaderHelper = new ClassLoaderHelper(classLoaderUtils);
 
         final List<Class<?>> classes = new ArrayList<>();
         File tmpDir = new File(TMP_DIR);
@@ -177,11 +179,9 @@ public class OrpheusDbPersistence extends Persistence {
             try {
                 if (!FileUtils.isEmpty(tmpDir)) {
                     try {
-                        String jarOutputFullPath = tmpDir.getParent() + File.separator + ORPHEUS_DB + "-" + GENERATED_CLASSES + ".jar";
-                        jarUtils.generateJarFromDirectory(tmpDir.getAbsolutePath(),
-                                jarOutputFullPath, 2);
-                        classLoaderUtils.loadClassesInsideJar(new File(jarOutputFullPath));
-                    } catch (IOException e) {
+                        classLoaderUtils.addToClasspath(tmpDir.getAbsolutePath());
+                        classLoaderHelper.addClassesInDirectoryToClasspath(tmpDir);
+                    } catch (Throwable e) {
                         e.printStackTrace();
                     }
                 }
