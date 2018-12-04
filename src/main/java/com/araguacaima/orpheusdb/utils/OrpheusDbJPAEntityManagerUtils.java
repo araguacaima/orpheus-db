@@ -423,7 +423,7 @@ public class OrpheusDbJPAEntityManagerUtils {
     public static  <T, V> List<V>  findListByNativeQueryVersioned(Class<T> clazz, String query) {
         //TODO Finish Orpheus DB versioning implementation
         Table table = AnnotationHelper.getAnnotation(clazz, Table.class);
-        String query_ = "SELECT children FROM " + table.schema() + "." + clazz.getSimpleName() + " WHERE vid = 'HEAD'";
+        String query_ = "SELECT t.children FROM " + table.schema() + "." + clazz.getSimpleName() + " t WHERE t.vid = 'HEAD'";
         List<T> ids = findListByNativeQuery(clazz, query_);
         List<V> result = new ArrayList<>();
         Class<V> unversionedClazz = getUnversionedClass(clazz);
@@ -454,8 +454,7 @@ public class OrpheusDbJPAEntityManagerUtils {
             versionedClass = (Class<V>) Class.forName(versionedClassName);
             log.debug("Class '" + clazz.getName() + "' is versioned by '" + versionedClass.getName() + ". Orpheus is going to intercept query in order to provide versioned data properly");
         } catch (Throwable t) {
-            log.error(t.getMessage());
-            log.debug("Class '" + clazz.getName() + "' is not versioned. Continuing with no intervention!");
+            log.error("Class '" + clazz.getName() + "' is not versioned. Continuing with no intervention!");
         }
         return versionedClass;
     }
@@ -475,8 +474,7 @@ public class OrpheusDbJPAEntityManagerUtils {
             unversionedClass = (Class<V>) Class.forName(unversionedClassName);
             log.debug("Class '" + clazz.getName() + "' is versioned by '" + unversionedClass.getName() + ". Orpheus is going to intercept query in order to provide versioned data properly");
         } catch (Throwable t) {
-            log.error(t.getMessage());
-            log.debug("Class '" + clazz.getName() + "' is not versioned. Continuing with no intervention!");
+            log.error("Class '" + clazz.getName() + "' is not versioned. Continuing with no intervention!");
         }
         return unversionedClass;
     }

@@ -18,9 +18,11 @@ public class OrpheusDbAspect {
 
     private static Logger log = LoggerFactory.getLogger(OrpheusDbJPAEntityManagerUtils.class);
 
-
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.executeQuery(Class, String))")
     public <T> List<T> executeQueryClassQuery(ProceedingJoinPoint joinPoint) throws Throwable {
+        if (!OrpheusDbPersistence.HAS_VERSIONED_CLASSES) {
+            return (List<T>) joinPoint.proceed(joinPoint.getArgs());
+        }
         Object[] args = joinPoint.getArgs();
         Class<T> clazz = (Class<T>) args[0];
         String query = (String) args[1];
@@ -35,6 +37,9 @@ public class OrpheusDbAspect {
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.executeQuery(Class, String, Object))")
     public <T> List<T> executeQueryClassQueryParams(ProceedingJoinPoint joinPoint) throws Throwable {
+        if (!OrpheusDbPersistence.HAS_VERSIONED_CLASSES) {
+            return (List<T>) joinPoint.proceed(joinPoint.getArgs());
+        }
         Object[] args = joinPoint.getArgs();
         Class<T> clazz = (Class<T>) args[0];
         String query = (String) args[1];
@@ -50,6 +55,9 @@ public class OrpheusDbAspect {
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.findByQuery(Class, String))")
     public <T> T findByQueryClassQuery(ProceedingJoinPoint joinPoint) throws Throwable {
+        if (!OrpheusDbPersistence.HAS_VERSIONED_CLASSES) {
+            return (T) joinPoint.proceed(joinPoint.getArgs());
+        }
         Object[] args = joinPoint.getArgs();
         Class<T> clazz = (Class<T>) args[0];
         String query = (String) args[1];
@@ -64,6 +72,9 @@ public class OrpheusDbAspect {
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.findByQuery(Class, String, Object))")
     public <T> T findByQueryClassQueryParams(ProceedingJoinPoint joinPoint) throws Throwable {
+        if (!OrpheusDbPersistence.HAS_VERSIONED_CLASSES) {
+            return (T) joinPoint.proceed(joinPoint.getArgs());
+        }
         Object[] args = joinPoint.getArgs();
         Class<T> clazz = (Class<T>) args[0];
         String query = (String) args[1];
@@ -79,6 +90,9 @@ public class OrpheusDbAspect {
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.findByNativeQuery(Class, String))")
     public <T> T findByNativeQueryClassQuery(ProceedingJoinPoint joinPoint) throws Throwable {
+        if (!OrpheusDbPersistence.HAS_VERSIONED_CLASSES) {
+            return (T) joinPoint.proceed(joinPoint.getArgs());
+        }
         Object[] args = joinPoint.getArgs();
         Class<T> clazz = (Class<T>) args[0];
         String query = (String) args[1];
@@ -93,6 +107,9 @@ public class OrpheusDbAspect {
 
     @Around("execution(* com.araguacaima.orpheusdb.utils.OrpheusDbJPAEntityManagerUtils.findByNativeQuery(Class, String, Object))")
     public <T> T findByNativeQueryClassQueryParams(ProceedingJoinPoint joinPoint) throws Throwable {
+        if (!OrpheusDbPersistence.HAS_VERSIONED_CLASSES) {
+            return (T) joinPoint.proceed(joinPoint.getArgs());
+        }
         Object[] args = joinPoint.getArgs();
         Class<T> clazz = (Class<T>) args[0];
         String query = (String) args[1];

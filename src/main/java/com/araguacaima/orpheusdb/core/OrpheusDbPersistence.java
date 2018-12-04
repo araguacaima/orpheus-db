@@ -55,6 +55,7 @@ public class OrpheusDbPersistence extends Persistence {
     private static final String GENERATED_CLASSES = "generated-classes";
     private static final String ORPHEUS_DB_HOME = SystemUtils.getUserHome().getAbsolutePath() + "/" + ORPHEUS_DB;
     private static final String TMP_DIR = ORPHEUS_DB_HOME + "/" + GENERATED_CLASSES;
+    public static Boolean HAS_VERSIONED_CLASSES = false;
 
     /**
      * Create and return an EntityManagerFactory for the named persistence unit
@@ -70,17 +71,8 @@ public class OrpheusDbPersistence extends Persistence {
      */
     @SuppressWarnings("unchecked")
     public static EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
-        classLoaderUtils.init();
-        ClassLoaderHelper classLoaderHelper = new ClassLoaderHelper(classLoaderUtils);
 
         final List<Class<?>> classes = new ArrayList<>();
-        File tmpDir = new File(TMP_DIR);
-        try {
-            FileUtils.forceDelete(new File(ORPHEUS_DB_HOME));
-            FileUtils.forceMkdir(tmpDir);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         try {
             classes.addAll((List<Class<?>>) properties.get("orpheus.db.versionable.classes"));
@@ -119,26 +111,39 @@ public class OrpheusDbPersistence extends Persistence {
             });
         }
 
-        String packagesToScan = (String) properties.get("packagesToScan");
-        ConfigurationBuilder builder = new ConfigurationBuilder();
-        FilterBuilder filter = new FilterBuilder();
-
-        for (String param : packagesToScan.split(",")) {
-            String trimmedParam = param.trim();
-            builder.addUrls(ClasspathHelper.forPackage(trimmedParam));
-            filter.includePackage(trimmedParam);
-        }
-        builder.filterInputsBy(filter);
-        Reflections reflections = new Reflections(builder);
-        Set<Class<?>> typesAnnotatedWithVersionable = reflections.getTypesAnnotatedWith(Versionable.class);
-        typesAnnotatedWithVersionable.forEach(entity -> {
-            if (AnnotationHelper.getAnnotation(entity, Generated.class) == null) {
-                classes.add(entity);
-            }
-        });
-        log.info("Classes to load: " + classes);
 
         if (CollectionUtils.isNotEmpty(classes)) {
+            HAS_VERSIONED_CLASSES = true;
+            log.info("Classes to load: " + classes);
+            String packagesToScan = (String) properties.get("packagesToScan");
+            ConfigurationBuilder builder = new ConfigurationBuilder();
+            FilterBuilder filter = new FilterBuilder();
+
+            for (String param : packagesToScan.split(",")) {
+                String trimmedParam = param.trim();
+                builder.addUrls(ClasspathHelper.forPackage(trimmedParam));
+                filter.includePackage(trimmedParam);
+            }
+            builder.filterInputsBy(filter);
+            Reflections reflections = new Reflections(builder);
+            Set<Class<?>> typesAnnotatedWithVersionable = reflections.getTypesAnnotatedWith(Versionable.class);
+            typesAnnotatedWithVersionable.forEach(entity -> {
+                if (AnnotationHelper.getAnnotation(entity, Generated.class) == null) {
+                    classes.add(entity);
+                }
+            });
+
+            classLoaderUtils.init();
+            ClassLoaderHelper classLoaderHelper = new ClassLoaderHelper(classLoaderUtils);
+
+            File tmpDir = new File(TMP_DIR);
+            try {
+                FileUtils.forceDelete(new File(ORPHEUS_DB_HOME));
+                FileUtils.forceMkdir(tmpDir);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             Set<String> packagesToScanList = new TreeSet<>();
             ClassPool pool = ClassPool.getDefault();
             classes.forEach((Class<?> clazz) -> {

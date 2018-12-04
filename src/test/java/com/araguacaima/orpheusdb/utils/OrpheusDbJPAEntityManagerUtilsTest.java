@@ -69,16 +69,29 @@ public class OrpheusDbJPAEntityManagerUtilsTest {
     }
 
     @Test
-    public void testExecuteVersionedQuery() {
+    public void testFindListByNativeQuery() {
         String query = "SELECT f.* FROM orpheusdb.f f WHERE f.testField2 = 2";
         List<A> list = OrpheusDbJPAEntityManagerUtils.findListByNativeQuery(A.class, query);
         Assert.assertNotNull(list);
         Assert.assertEquals(list.size(), 1);
         A result = list.get(0);
-        Assert.assertEquals(result.getTestField1(),"testField1-2");
-        Assert.assertEquals(result.getTestField2(),2);
-        Assert.assertEquals(result.getTestField7(),"testField7-2");
-        Assert.assertEquals(result.getTestField9(),"testField9-2");
+        Assert.assertEquals(result.getTestField1(), "testField1-2");
+        Assert.assertEquals(result.getTestField2(), 2);
+        Assert.assertEquals(result.getTestField7(), "testField7-2");
+        Assert.assertEquals(result.getTestField9(), "testField9-2");
+    }
 
+    @Test
+    public void testFindListByNativeQueryVersioned() {
+        String query = "SELECT f.* FROM orpheusdb.f f WHERE f.testField2 = 2";
+        Class<?> versionedClass = OrpheusDbJPAEntityManagerUtils.getVersionedClass(A.class);
+        List<A> list = OrpheusDbJPAEntityManagerUtils.findListByNativeQueryVersioned(versionedClass, query);
+        Assert.assertNotNull(list);
+        Assert.assertEquals(list.size(), 1);
+        A result = list.get(0);
+        Assert.assertEquals(result.getTestField1(), "testField1-2");
+        Assert.assertEquals(result.getTestField2(), 2);
+        Assert.assertEquals(result.getTestField7(), "testField7-2");
+        Assert.assertEquals(result.getTestField9(), "testField9-2");
     }
 }
