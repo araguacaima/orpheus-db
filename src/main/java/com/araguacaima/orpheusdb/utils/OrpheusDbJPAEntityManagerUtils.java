@@ -90,7 +90,6 @@ public class OrpheusDbJPAEntityManagerUtils {
             }
         } catch (Throwable ignored) {
             rollback();
-            begin();
         }
         return null;
     }
@@ -114,7 +113,6 @@ public class OrpheusDbJPAEntityManagerUtils {
             }
         } catch (Throwable ignored) {
             rollback();
-            begin();
         }
         return null;
     }
@@ -140,7 +138,6 @@ public class OrpheusDbJPAEntityManagerUtils {
             }
         } catch (Throwable ignored) {
             rollback();
-            begin();
         }
         return null;
     }
@@ -164,7 +161,6 @@ public class OrpheusDbJPAEntityManagerUtils {
             }
         } catch (Throwable ignored) {
             rollback();
-            begin();
         }
         return null;
     }
