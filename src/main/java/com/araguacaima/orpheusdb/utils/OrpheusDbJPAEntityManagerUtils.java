@@ -478,4 +478,8 @@ public class OrpheusDbJPAEntityManagerUtils {
         }
         return unversionedClass;
     }
+
+    public static EntityManager getEntityManager() {
+        return entityManager;
+    }
 }
