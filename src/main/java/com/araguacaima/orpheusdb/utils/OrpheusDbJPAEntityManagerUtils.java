@@ -420,7 +420,7 @@ public class OrpheusDbJPAEntityManagerUtils {
     }
 
 
-    public static  <T, V> List<V>  findListByNativeQueryVersioned(Class<T> clazz, String query) {
+    public static <T, V> List<V> findListByNativeQueryVersioned(Class<T> clazz, String query) {
         //TODO Finish Orpheus DB versioning implementation
         Table table = AnnotationHelper.getAnnotation(clazz, Table.class);
         String query_ = "SELECT t.children FROM " + table.schema() + "." + clazz.getSimpleName() + " t WHERE t.vid = 'HEAD'";
@@ -440,13 +440,13 @@ public class OrpheusDbJPAEntityManagerUtils {
         return result;
     }
 
-    public static  <T, V> List<V>  findListByNativeQueryVersioned(Class<T> clazz, String query, Map<String, Object> params) {
+    public static <T, V> List<V> findListByNativeQueryVersioned(Class<T> clazz, String query, Map<String, Object> params) {
         //TODO Finish Orpheus DB versioning implementation
         return findListByNativeQueryVersioned(clazz, query, params);
     }
 
 
-    public static <T,V> Class<V> getVersionedClass(Class<T> clazz) {
+    public static <T, V> Class<V> getVersionedClass(Class<T> clazz) {
         Class<V> versionedClass = null;
         String versionedPackageName = clazz.getPackage().getName() + "." + OrpheusDbPersistence.GENERATED_PACKAGE;
         String versionedClassName = versionedPackageName + "." + clazz.getSimpleName() + OrpheusDbPersistence.VERSIONABLE_SIMPLE_NAME;
@@ -459,7 +459,7 @@ public class OrpheusDbJPAEntityManagerUtils {
         return versionedClass;
     }
 
-    public static <T,V> Class<V> getUnversionedClass(Class<T> clazz) {
+    public static <T, V> Class<V> getUnversionedClass(Class<T> clazz) {
         Class<V> unversionedClass = null;
         String unversionedPackageName = clazz.getPackage().getName();
         String suffix = "." + OrpheusDbPersistence.GENERATED_PACKAGE;
