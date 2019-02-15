@@ -80,7 +80,10 @@ public class OrpheusDbJPAEntityManagerUtils {
             TypedQuery<T> namedQuery = entityManager.createNamedQuery(query, clazz);
             if (params != null) {
                 for (Map.Entry<String, Object> param : params.entrySet()) {
-                    namedQuery.setParameter(param.getKey(), param.getValue());
+                    try {
+                        namedQuery.setParameter(param.getKey(), param.getValue());
+                    } catch (Throwable ignored) {
+                    }
                 }
             }
             try {
@@ -88,10 +91,10 @@ public class OrpheusDbJPAEntityManagerUtils {
             } catch (javax.persistence.NoResultException ignored) {
                 return null;
             }
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
             rollback();
+            throw t;
         }
-        return null;
     }
 
     public static <T> T findByQuery(Class<T> clazz, String query) {
@@ -103,7 +106,10 @@ public class OrpheusDbJPAEntityManagerUtils {
             TypedQuery<T> namedQuery = entityManager.createNamedQuery(query, clazz);
             if (params != null) {
                 for (Map.Entry<String, Object> param : params.entrySet()) {
+                    try {
                     namedQuery.setParameter(param.getKey(), param.getValue());
+                    } catch (Throwable ignored) {
+                    }
                 }
             }
             try {
@@ -111,10 +117,10 @@ public class OrpheusDbJPAEntityManagerUtils {
             } catch (javax.persistence.NoResultException ignored) {
                 return null;
             }
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
             rollback();
+            throw t;
         }
-        return null;
     }
 
     public static <T> T findByNativeQuery(Class<T> clazz, String query) {
@@ -127,7 +133,10 @@ public class OrpheusDbJPAEntityManagerUtils {
             Query namedQuery = entityManager.createNativeQuery(query, clazz);
             if (params != null) {
                 for (Map.Entry<String, Object> param : params.entrySet()) {
+                    try {
                     namedQuery.setParameter(param.getKey(), param.getValue());
+                    } catch (Throwable ignored) {
+                    }
                 }
             }
             try {
@@ -136,10 +145,10 @@ public class OrpheusDbJPAEntityManagerUtils {
             } catch (javax.persistence.NoResultException ignored) {
                 return null;
             }
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
             rollback();
+            throw t;
         }
-        return null;
     }
 
     public static <T> List<T> findListByNativeQuery(Class<T> clazz, String query) {
@@ -151,7 +160,10 @@ public class OrpheusDbJPAEntityManagerUtils {
             Query namedQuery = entityManager.createNativeQuery(query, clazz);
             if (params != null) {
                 for (Map.Entry<String, Object> param : params.entrySet()) {
+                    try {
                     namedQuery.setParameter(param.getKey(), param.getValue());
+                    } catch (Throwable ignored) {
+                    }
                 }
             }
             try {
@@ -159,10 +171,10 @@ public class OrpheusDbJPAEntityManagerUtils {
             } catch (javax.persistence.NoResultException ignored) {
                 return null;
             }
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
             rollback();
+            throw t;
         }
-        return null;
     }
 
     public static <T> T merge(T entity) {
