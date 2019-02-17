@@ -53,19 +53,24 @@ public class OrpheusDbJPAEntityManagerUtilsTest {
         environment.put("packagesToScan", "com.araguacaima.orpheusdb.model,com.araguacaima.orpheusdb.jar.model");
         environment.put("orpheus.db.versionable.packages", "com.araguacaima.orpheusdb.model.versionable,com.araguacaima.orpheusdb.jar.model.versionable");
         environment.put("orpheus.db.versionable.classes", "com.araguacaima.orpheusdb.model.B,com.araguacaima.orpheusdb.jar.model.H");
-        OrpheusDbJPAEntityManagerUtils.init(PERSISTENCE_UNIT_NAME, environment);
-        A a1 = new A();
-        a1.setTestField1("testField1-1");
-        a1.setTestField2(1);
-        a1.setTestField7("testField7-1");
-        a1.setTestField9("testField9-1");
-        OrpheusDbJPAEntityManagerUtils.persist(a1);
-        A a2 = new A();
-        a2.setTestField1("testField1-2");
-        a2.setTestField2(2);
-        a2.setTestField7("testField7-2");
-        a2.setTestField9("testField9-2");
-        OrpheusDbJPAEntityManagerUtils.persist(a2);
+        try {
+            OrpheusDbJPAEntityManagerUtils.init(PERSISTENCE_UNIT_NAME, environment);
+            A a1 = new A();
+            a1.setTestField1("testField1-1");
+            a1.setTestField2(1);
+            a1.setTestField7("testField7-1");
+            a1.setTestField9("testField9-1");
+            OrpheusDbJPAEntityManagerUtils.persist(a1);
+            A a2 = new A();
+            a2.setTestField1("testField1-2");
+            a2.setTestField2(2);
+            a2.setTestField7("testField7-2");
+            a2.setTestField9("testField9-2");
+            OrpheusDbJPAEntityManagerUtils.persist(a2);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            Assert.fail();
+        }
     }
 
     @Test

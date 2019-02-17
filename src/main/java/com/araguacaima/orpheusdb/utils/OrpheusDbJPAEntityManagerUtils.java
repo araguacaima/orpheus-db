@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
+import javax.transaction.*;
+import javax.transaction.RollbackException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,6 +20,7 @@ import java.util.Map;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class OrpheusDbJPAEntityManagerUtils {
+    private static TransactionManager transactionManager;
     private static EntityManagerFactory entityManagerFactory;
     private static EntityManager entityManager;
     private static boolean autocommit = true;
@@ -30,25 +33,42 @@ public class OrpheusDbJPAEntityManagerUtils {
     private static Logger log = LoggerFactory.getLogger(OrpheusDbJPAEntityManagerUtils.class);
 
     public static void closeAll() {
-        close(entityManager, entityManagerFactory);
+        try {
+            close(true);
+        } catch (SystemException | NotSupportedException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void close() {
-        close(entityManager, null);
-    }
-
-    private static void close(EntityManager em, EntityManagerFactory emf) {
-        if (em != null) {
-            em.clear();
-            em.close();
-        }
-        if (emf != null) {
-            emf.close();
+        try {
+            close(false);
+        } catch (SystemException | NotSupportedException e) {
+            e.printStackTrace();
         }
     }
 
-    public static void init(String persistenceUnitName, Map<String, String> map) {
+    private static void close(boolean cloaseAll) throws SystemException, NotSupportedException {
+        if (entityManager != null) {
+            if (entityManager.isOpen()) {
+                entityManager.clear();
+                entityManager.close();
+                transactionManager = com.arjuna.ats.jta.TransactionManager.transactionManager();
+                transactionManager.begin();
+                entityManager = entityManagerFactory.createEntityManager();
+            }
+        }
+        if (entityManagerFactory != null) {
+            if (entityManagerFactory.isOpen()) {
+                entityManagerFactory.close();
+            }
+        }
+    }
+
+    public static void init(String persistenceUnitName, Map<String, String> map) throws SystemException, NotSupportedException {
         entityManagerFactory = OrpheusDbPersistence.createEntityManagerFactory(persistenceUnitName, map);
+        transactionManager = com.arjuna.ats.jta.TransactionManager.transactionManager();
+        transactionManager.begin();
         entityManager = entityManagerFactory.createEntityManager();
         entityManager.unwrap(Session.class);
     }
@@ -92,7 +112,12 @@ public class OrpheusDbJPAEntityManagerUtils {
                 return null;
             }
         } catch (Throwable t) {
-            rollback();
+            try {
+                rollback();
+            } catch (Throwable ignored) {
+                log.warn("Closing transaction!");
+                close();
+            }
             throw t;
         }
     }
@@ -107,7 +132,7 @@ public class OrpheusDbJPAEntityManagerUtils {
             if (params != null) {
                 for (Map.Entry<String, Object> param : params.entrySet()) {
                     try {
-                    namedQuery.setParameter(param.getKey(), param.getValue());
+                        namedQuery.setParameter(param.getKey(), param.getValue());
                     } catch (Throwable ignored) {
                     }
                 }
@@ -118,7 +143,12 @@ public class OrpheusDbJPAEntityManagerUtils {
                 return null;
             }
         } catch (Throwable t) {
-            rollback();
+            try {
+                rollback();
+            } catch (Throwable ignored) {
+                log.warn("Closing transaction!");
+                close();
+            }
             throw t;
         }
     }
@@ -134,7 +164,7 @@ public class OrpheusDbJPAEntityManagerUtils {
             if (params != null) {
                 for (Map.Entry<String, Object> param : params.entrySet()) {
                     try {
-                    namedQuery.setParameter(param.getKey(), param.getValue());
+                        namedQuery.setParameter(param.getKey(), param.getValue());
                     } catch (Throwable ignored) {
                     }
                 }
@@ -146,7 +176,12 @@ public class OrpheusDbJPAEntityManagerUtils {
                 return null;
             }
         } catch (Throwable t) {
-            rollback();
+            try {
+                rollback();
+            } catch (Throwable ignored) {
+                log.warn("Closing transaction!");
+                close();
+            }
             throw t;
         }
     }
@@ -161,7 +196,7 @@ public class OrpheusDbJPAEntityManagerUtils {
             if (params != null) {
                 for (Map.Entry<String, Object> param : params.entrySet()) {
                     try {
-                    namedQuery.setParameter(param.getKey(), param.getValue());
+                        namedQuery.setParameter(param.getKey(), param.getValue());
                     } catch (Throwable ignored) {
                     }
                 }
@@ -172,23 +207,28 @@ public class OrpheusDbJPAEntityManagerUtils {
                 return null;
             }
         } catch (Throwable t) {
-            rollback();
+            try {
+                rollback();
+            } catch (Throwable ignored) {
+                log.warn("Closing transaction!");
+                close();
+            }
             throw t;
         }
     }
 
-    public static <T> T merge(T entity) {
+    public static <T> T merge(T entity) throws SystemException, NotSupportedException {
         return merge(entity, getAutocommit());
     }
 
-    public static <T> T merge(T entity, boolean autocommit) {
+    public static <T> T merge(T entity, boolean autocommit) throws SystemException, NotSupportedException {
         if (entity == null) {
             return null;
         }
-        if (autocommit) {
-            begin();
-        }
         try {
+            if (autocommit) {
+                begin();
+            }
             Object key = extractId(entity);
             if (key != null && find(entity.getClass(), key) == null) {
                 logProcessing(entity, "persist");
@@ -227,11 +267,11 @@ public class OrpheusDbJPAEntityManagerUtils {
         return null;
     }
 
-    public static void persist(Object entity) {
+    public static void persist(Object entity) throws HeuristicRollbackException, RollbackException, NotSupportedException, HeuristicMixedException, SystemException {
         persist(entity, getAutocommit());
     }
 
-    public static void persist(Object entity, boolean autocommit) {
+    public static void persist(Object entity, boolean autocommit) throws HeuristicRollbackException, RollbackException, NotSupportedException, HeuristicMixedException, SystemException {
         if (autocommit) {
             begin();
         }
@@ -247,17 +287,22 @@ public class OrpheusDbJPAEntityManagerUtils {
         } catch (Throwable t) {
             log.error(t.getMessage());
             if (autocommit) {
-                rollback();
+                try {
+                    rollback();
+                } catch (Throwable ignored) {
+                    log.warn("Closing transaction!");
+                    close();
+                }
             }
             throw t;
         }
     }
 
-    public static void delete(Object entity) {
+    public static void delete(Object entity) throws HeuristicRollbackException, RollbackException, NotSupportedException, HeuristicMixedException, SystemException {
         delete(entity, getAutocommit());
     }
 
-    public static void delete(Object entity, boolean autocommit) {
+    public static void delete(Object entity, boolean autocommit) throws HeuristicRollbackException, RollbackException, NotSupportedException, HeuristicMixedException, SystemException {
         if (autocommit) {
             begin();
         }
@@ -270,13 +315,18 @@ public class OrpheusDbJPAEntityManagerUtils {
         } catch (Throwable t) {
             log.error(t.getMessage());
             if (autocommit) {
-                rollback();
+                try {
+                    rollback();
+                } catch (Throwable ignored) {
+                    log.warn("Closing transaction!");
+                    close();
+                }
             }
             throw t;
         }
     }
 
-    public static void delete(Class<?> clazz, String key) {
+    public static void delete(Class<?> clazz, String key) throws HeuristicRollbackException, RollbackException, NotSupportedException, HeuristicMixedException, SystemException {
         begin();
         try {
             Session session = entityManager.unwrap(Session.class);
@@ -292,17 +342,22 @@ public class OrpheusDbJPAEntityManagerUtils {
         } catch (Throwable t) {
             log.error(t.getMessage());
             if (autocommit) {
-                rollback();
+                try {
+                    rollback();
+                } catch (Throwable ignored) {
+                    log.warn("Closing transaction!");
+                    close();
+                }
             }
             throw t;
         }
     }
 
-    public static void detach(Object entity) {
+    public static void detach(Object entity) throws SystemException, NotSupportedException, HeuristicRollbackException, HeuristicMixedException, RollbackException {
         detach(entity, getAutocommit());
     }
 
-    public static void detach(Object entity, boolean autocommit) {
+    public static void detach(Object entity, boolean autocommit) throws NotSupportedException, SystemException, HeuristicRollbackException, HeuristicMixedException, RollbackException {
         if (autocommit) {
             begin();
         }
@@ -314,29 +369,34 @@ public class OrpheusDbJPAEntityManagerUtils {
         } catch (Throwable t) {
             log.error(t.getMessage());
             if (autocommit) {
-                rollback();
+                try {
+                    rollback();
+                } catch (Throwable ignored) {
+                    log.warn("Closing transaction!");
+                    close();
+                }
             }
             throw t;
         }
     }
 
-    public static void update(Object entity) {
+    public static void update(Object entity) throws SystemException, NotSupportedException {
         update(entity, getAutocommit());
     }
 
-    public static void update(Object entity, boolean autocommit) {
+    public static void update(Object entity, boolean autocommit) throws SystemException, NotSupportedException {
         merge(entity, autocommit);
     }
 
-    public static void executeNativeQuery(String query) {
+    public static void executeNativeQuery(String query) throws HeuristicRollbackException, RollbackException, NotSupportedException, HeuristicMixedException, SystemException {
         executeNativeQuery(query, getAutocommit());
     }
 
-    public static void executeNativeQuery(String query, boolean autocommit) {
-        if (autocommit) {
-            begin();
-        }
+    public static void executeNativeQuery(String query, boolean autocommit) throws HeuristicRollbackException, RollbackException, NotSupportedException, HeuristicMixedException, SystemException {
         try {
+            if (autocommit) {
+                begin();
+            }
             Query nativeQuery = entityManager.createNativeQuery(query);
             nativeQuery.executeUpdate();
             if (autocommit) {
@@ -345,17 +405,26 @@ public class OrpheusDbJPAEntityManagerUtils {
         } catch (Throwable t) {
             log.error(t.getMessage());
             if (autocommit) {
-                rollback();
+                try {
+                    rollback();
+                } catch (Throwable ignored) {
+                    log.warn("Closing transaction!");
+                    close();
+                }
             }
             throw t;
         }
     }
 
-    public static void begin() {
+    public static void begin() throws SystemException, NotSupportedException {
         try {
-            entityManager.getTransaction().begin();
-        } catch (java.lang.IllegalStateException ex) {
-            if (!"Transaction already active".equals(ex.getMessage())) {
+            if (!entityManager.isOpen()) {
+                entityManager = entityManagerFactory.createEntityManager();
+            }
+            transactionManager.begin();
+        } catch (Throwable ex) {
+            String message = ex.getMessage();
+            if (!"Transaction already active".equals(message) && !message.contains("thread is already associated with a transaction!")) {
                 throw ex;
             }
         }
@@ -382,12 +451,16 @@ public class OrpheusDbJPAEntityManagerUtils {
     }
 
 
-    public static void commit() {
-        entityManager.getTransaction().commit();
+    public static void commit() throws HeuristicRollbackException, RollbackException, HeuristicMixedException, SystemException, NotSupportedException {
+        transactionManager.commit();
+        entityManager.clear();
+        transactionManager.begin();
     }
 
-    public static void rollback() {
-        entityManager.getTransaction().rollback();
+    public static void rollback() throws SystemException, NotSupportedException {
+        transactionManager.rollback();
+        entityManager.clear();
+        transactionManager.begin();
     }
 
     public static boolean getAutocommit() {
