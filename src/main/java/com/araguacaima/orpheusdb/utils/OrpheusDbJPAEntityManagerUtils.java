@@ -20,7 +20,7 @@ import java.util.Map;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class OrpheusDbJPAEntityManagerUtils {
-    private static TransactionManager transactionManager;
+    //private static TransactionManager transactionManager;
     private static EntityManagerFactory entityManagerFactory;
     private static EntityManager entityManager;
     private static boolean autocommit = true;
@@ -53,8 +53,8 @@ public class OrpheusDbJPAEntityManagerUtils {
             if (entityManager.isOpen()) {
                 entityManager.clear();
                 entityManager.close();
-                transactionManager = com.arjuna.ats.jta.TransactionManager.transactionManager();
-                transactionManager.begin();
+               // transactionManager = com.arjuna.ats.jta.TransactionManager.transactionManager();
+               // transactionManager.begin();
                 entityManager = entityManagerFactory.createEntityManager();
             }
         }
@@ -67,8 +67,8 @@ public class OrpheusDbJPAEntityManagerUtils {
 
     public static void init(String persistenceUnitName, Map<String, String> map) throws SystemException, NotSupportedException {
         entityManagerFactory = OrpheusDbPersistence.createEntityManagerFactory(persistenceUnitName, map);
-        transactionManager = com.arjuna.ats.jta.TransactionManager.transactionManager();
-        transactionManager.begin();
+        //transactionManager = com.arjuna.ats.jta.TransactionManager.transactionManager();
+        //transactionManager.begin();
         entityManager = entityManagerFactory.createEntityManager();
         entityManager.unwrap(Session.class);
     }
@@ -421,7 +421,7 @@ public class OrpheusDbJPAEntityManagerUtils {
             if (!entityManager.isOpen()) {
                 entityManager = entityManagerFactory.createEntityManager();
             }
-            transactionManager.begin();
+            entityManager.getTransaction().begin();
         } catch (Throwable ex) {
             String message = ex.getMessage();
             if (!"Transaction already active".equals(message) && !message.contains("thread is already associated with a transaction!")) {
@@ -452,15 +452,13 @@ public class OrpheusDbJPAEntityManagerUtils {
 
 
     public static void commit() throws HeuristicRollbackException, RollbackException, HeuristicMixedException, SystemException, NotSupportedException {
-        transactionManager.commit();
-        entityManager.clear();
-        transactionManager.begin();
+        entityManager.getTransaction().commit();
+        begin();
     }
 
     public static void rollback() throws SystemException, NotSupportedException {
-        transactionManager.rollback();
-        entityManager.clear();
-        transactionManager.begin();
+        entityManager.getTransaction().rollback();
+        begin();
     }
 
     public static boolean getAutocommit() {
