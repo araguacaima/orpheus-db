@@ -17,7 +17,6 @@ import javassist.bytecode.ConstPool;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.annotation.StringMemberValue;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
@@ -49,9 +48,8 @@ public class OrpheusDbPersistence extends Persistence {
     private static final GeneratedImpl generatedAnnotation = new GeneratedImpl();
 
     private static final Logger log = LoggerFactory.getLogger(OrpheusDbPersistence.class);
-    private static final JarUtils jarUtils = new JarUtils();
-    private static final ClassLoaderUtils classLoaderUtils = new ClassLoaderUtils(MapUtils.getInstance(),
-            new com.araguacaima.commons.utils.StringUtils(new NotNullOrEmptyStringPredicate(), null));
+    private static final JarUtils jarUtils = JarUtils.getInstance();
+    private static final ClassLoaderUtils classLoaderUtils = new ClassLoaderUtils(OrpheusDbPersistence.class.getClassLoader());
     private static final String GENERATED_CLASSES = "generated-classes";
     private static final String ORPHEUS_DB_HOME = SystemUtils.getUserHome().getAbsolutePath() + "/" + ORPHEUS_DB;
     private static final String TMP_DIR = ORPHEUS_DB_HOME + "/" + GENERATED_CLASSES;

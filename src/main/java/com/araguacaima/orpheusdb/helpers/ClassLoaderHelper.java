@@ -44,7 +44,7 @@ public class ClassLoaderHelper {
                     Class.forName(clazzName, true, child);
                     classLoaderUtils.addResourceToDependencies(file.getAbsolutePath());
                 }
-            } catch (ClassNotFoundException | IllegalAccessException | IOException | NoSuchFieldException e) {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
         });

@@ -1,7 +1,6 @@
 package com.araguacaima.orpheusdb.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -10,7 +9,6 @@ import java.util.UUID;
 
 @MappedSuperclass
 @PersistenceUnit(unitName = "orpheus-db-test")
-@Component
 public abstract class F implements Serializable {
 
     @Id

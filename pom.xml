@@ -50,7 +50,7 @@
     </distributionManagement>
 
     <properties>
-        <com.araguacaima-commons-utils>1.0.1-SNAPSHOT</com.araguacaima-commons-utils>
+        <com.araguacaima-commons-utils>1.5.4</com.araguacaima-commons-utils>
         <com.araguacaima-composite-specification>1.0.1-SNAPSHOT</com.araguacaima-composite-specification>
         <com.araguacaima-orpheus-db-test-jar>1.0.1-SNAPSHOT</com.araguacaima-orpheus-db-test-jar>
         <org.slf4j-slf4j-api>1.7.7</org.slf4j-slf4j-api>

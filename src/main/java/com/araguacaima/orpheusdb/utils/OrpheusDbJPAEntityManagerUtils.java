@@ -28,7 +28,7 @@ public class OrpheusDbJPAEntityManagerUtils {
 
     @Transient
     @JsonIgnore
-    private static ReflectionUtils reflectionUtils = new ReflectionUtils(null);
+    private static ReflectionUtils reflectionUtils = ReflectionUtils.getInstance();
 
     private static Logger log = LoggerFactory.getLogger(OrpheusDbJPAEntityManagerUtils.class);
 
@@ -434,7 +434,7 @@ public class OrpheusDbJPAEntityManagerUtils {
         if (log.isDebugEnabled()) {
             String type = entity.getClass().getSimpleName();
             Object id = reflectionUtils.invokeGetter(entity, "id");
-            Field field = reflectionUtils.getFieldByFieldName(entity, "name");
+            Field field = reflectionUtils.getField(entity, "name");
             if (field != null) {
                 Object name = null;
                 try {

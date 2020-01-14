@@ -1,7 +1,5 @@
 package com.araguacaima.orpheusdb.model;
 
-import org.springframework.stereotype.Component;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.LinkedHashSet;
@@ -12,7 +10,6 @@ import java.util.Set;
 @PersistenceUnit(unitName = "orpheus-db-test")
 @Table(name = "F", schema = "orpheusdb", uniqueConstraints = @UniqueConstraint(columnNames = {"testField7", "testField9"}))
 @DiscriminatorColumn(name = "modelType", discriminatorType = DiscriminatorType.STRING)
-@Component
 public abstract class E extends F {
 
     @Column(nullable = false)
