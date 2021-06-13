@@ -231,7 +231,7 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <build>
-                <defaultGoal>clean deploy -P release:clean release:prepare release:perform</defaultGoal>
+                <defaultGoal>clean deploy -B release:clean release:prepare release:perform</defaultGoal>
                 <plugins>
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
