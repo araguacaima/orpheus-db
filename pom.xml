@@ -4,7 +4,7 @@
 
     <groupId>com.araguacaima</groupId>
     <artifactId>orpheus-db</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
     <description>Orpheus DB implementation
@@ -34,7 +34,7 @@
         <connection>scm:git:https://github.com/araguacaima/orpheus-db</connection>
         <developerConnection>scm:git:https://github.com/araguacaima/orpheus-db</developerConnection>
         <url>scm:git:https://github.com/araguacaima/orpheus-db</url>
-        <tag>orpheus-db-1.0.3</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
