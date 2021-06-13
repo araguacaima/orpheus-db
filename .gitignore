@@ -24,3 +24,5 @@ build/
 hs_err_pid*
 lib-src/
 target/
+/pom.xml.releaseBackup
+/release.properties
