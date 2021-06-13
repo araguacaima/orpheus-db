@@ -4,7 +4,7 @@
 
     <groupId>com.araguacaima</groupId>
     <artifactId>orpheus-db</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
     <description>Orpheus DB implementation
