@@ -90,7 +90,7 @@
         <org.apache.cxf-cxf-bundle-jaxrs>2.3.0</org.apache.cxf-cxf-bundle-jaxrs>
         <com.github.bohnman-squiggly-filter-jackson>1.3.11</com.github.bohnman-squiggly-filter-jackson>
 
-        <com.h2database-h2>1.4.196</com.h2database-h2>
+        <com.h2database-h2>2.1.210</com.h2database-h2>
 
         <!-- Generic properties -->
         <java.version>1.8</java.version>
