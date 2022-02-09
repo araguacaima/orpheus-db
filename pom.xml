@@ -58,7 +58,7 @@
         <junit.version>4.13.1</junit.version>
         <logback.version>[1.2.0,)</logback.version>
         <org.hibernate-hibernate-c3p0>5.3.1.Final</org.hibernate-hibernate-c3p0>
-        <org.hibernate-hibernate-core>5.3.1.Final</org.hibernate-hibernate-core>
+        <org.hibernate-hibernate-core>5.4.24.Final</org.hibernate-hibernate-core>
         <org.hibernate.javax.persistence-hibernate-jpa-2.1-api>1.0.2.Final
         </org.hibernate.javax.persistence-hibernate-jpa-2.1-api>
         <org.jboss.narayana.jta-narayana-jta>5.3.1.Final</org.jboss.narayana.jta-narayana-jta>
